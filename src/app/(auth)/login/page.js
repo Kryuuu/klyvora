@@ -29,18 +29,27 @@ export default function LoginPage() {
     })
 
     if (authError) {
+      console.error('[Login Error Debug]:', authError)
       setError(authError.message)
       setLoading(false)
       return
     }
 
     const { user } = authData
+    console.log('[Login Session Debug]:', user)
+
     if (user) {
-      // 2. Profile Sync
-      await supabase.from('profiles').upsert({
-         id: user.id,
-         name: user.email.split('@')[0]
-      }, { onConflict: 'id' })
+      // 2. [SYC FIX] JIT Profile Sync (Following Senior Engineer rules)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+           id: user.id,
+           name: user.email.split('@')[0]
+        }, { onConflict: 'id' })
+
+      if (profileError) {
+         console.warn('[Profile Sync Alarm]:', profileError)
+      }
 
       router.push('/dashboard')
     }
@@ -52,7 +61,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md space-y-8 animate-fade-in">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-white mb-2">KlyVora AI</h1>
-          <p className="text-sm text-gray-400">Sign in to your account to manage workflows</p>
+          <p className="text-sm text-gray-400">Sign in to your account</p>
         </div>
 
         <Card className="p-8 border-[#1e1e2a] bg-[#16161e]">
@@ -66,7 +75,7 @@ export default function LoginPage() {
             <Input 
               label="Email Address" 
               type="email" 
-              placeholder="name@company.com"
+              placeholder="user@klyvora.ai"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -83,14 +92,14 @@ export default function LoginPage() {
             
             <Button 
                type="submit" 
-               className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-2.5 h-11" 
+               className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold h-11" 
                isLoading={loading}
             >
-               Sign In
+               Authorize Node
             </Button>
             
             <div className="text-center text-sm text-gray-400 mt-6 pt-6 border-t border-[#272737]">
-              Don't have an account?{' '}
+              New operator?{' '}
               <Link href="/register" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">
                 Create Account
               </Link>

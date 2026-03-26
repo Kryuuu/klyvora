@@ -13,8 +13,14 @@ export default function DashboardLayout({ children }) {
 
   useEffect(() => {
     async function checkUser() {
-      const { data: { user } } = await supabase.auth.getUser()
+      // 1. [MANDATORY] Session check using auth.getUser()
+      const { data: { user }, error } = await supabase.auth.getUser()
+      
+      console.log('[Dashboard Ssession Check]:', user)
+      if (error) console.error('[Dashboard Session Error]:', error)
+
       if (!user) {
+        console.warn('[Session Shield]: Redirecting to /login')
         router.push('/login')
       } else {
         setUser(user)
@@ -26,8 +32,8 @@ export default function DashboardLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0a0a0f] text-purple-500 font-medium animate-pulse">
-        Initializing Workspace...
+      <div className="flex h-screen items-center justify-center bg-[#0a0a0f] text-purple-500 font-medium animate-pulse uppercase tracking-[0.2em] text-xs">
+        Initializing Secure Connection...
       </div>
     )
   }

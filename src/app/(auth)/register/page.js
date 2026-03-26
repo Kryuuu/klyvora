@@ -27,23 +27,40 @@ export default function RegisterPage() {
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { full_name: fullName }
+      }
     })
 
     if (authError) {
+      console.error('[Register Error Debug]:', authError)
       setError(authError.message)
       setLoading(false)
       return
     }
 
     const { user } = authData
+    console.log('[Register Session Debug]:', user)
+
     if (user) {
-      // 2. Profile Upsert
-      await supabase.from('profiles').upsert({
+      console.log('[SCHEMA SYNC] JIT Profile Sync for user:', user.id)
+      
+      // 2. [SYNC FIX] Profiles table (id, name, created_at)
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
           id: user.id,
           name: fullName || email.split('@')[0]
-      }, { onConflict: 'id' })
+        }, { onConflict: 'id' })
 
-      alert('Registration successful! Please check your email for confirmation.')
+      if (profileError) {
+        console.error('[Profile Sync Error]:', profileError)
+        setError("Account created, but profile failed: " + profileError.message)
+        setLoading(false)
+        return
+      }
+
+      alert('Registration successful! Please check your email.')
       router.push('/login')
     }
     setLoading(false)
@@ -54,7 +71,7 @@ export default function RegisterPage() {
       <div className="w-full max-w-md space-y-8 animate-fade-in">
         <div className="text-center">
           <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Create Account</h1>
-          <p className="text-sm text-gray-400">Join KlyVora AI Workflow Automation</p>
+          <p className="text-sm text-gray-400">Join KlyVora AI Workflow</p>
         </div>
 
         <Card className="p-8 border-[#1e1e2a] bg-[#16161e]">
@@ -66,9 +83,9 @@ export default function RegisterPage() {
             )}
             
             <Input 
-              label="Full Name" 
+              label="Operator Name" 
               type="text" 
-              placeholder="Elon Musk"
+              placeholder="Name..."
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required

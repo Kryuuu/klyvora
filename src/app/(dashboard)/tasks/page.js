@@ -26,29 +26,46 @@ export default function TasksPage() {
 
   async function fetchData() {
     setLoading(true)
-    const { data: { user } } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    
+    console.log('[Tasks Flow Debug]:', user)
+    if (authError) {
+       console.error('[Tasks Session Error Check]:', authError)
+       router.push('/login')
+       return
+    }
+
     if (!user) {
        router.push('/login')
        return
     }
 
-    const { data: wfData } = await supabase.from('workflows').select('id, tittle').eq('user_id', user.id)
+    // 1. [SYNC FIX] Fetch Workflows (using title column)
+    const { data: wfData, error: wfFetchError } = await supabase
+      .from('workflows')
+      .select('id, title') // DB Sync: title
+      .eq('user_id', user.id)
+    
+    if (wfFetchError) console.error('[Tasks Workflow Fetch Error]:', wfFetchError)
+    
     setWorkflows(wfData || [])
     if (wfData?.length > 0) setSelectedWorkflowId(wfData[0].id)
 
-    const { data: taskData, error } = await supabase
+    // 2. [SYNC FIX] Fetch Tasks with joined workflow (using title columns)
+    const { data: taskData, error: taskFetchError } = await supabase
       .from('tasks')
       .select(`
         *,
         workflows (
-          tittle
+          title
         )
       `)
       .order('created_at', { ascending: false })
 
-    if (error) {
-       console.error('[Task Error]:', error)
+    if (taskFetchError) {
+       console.error('[Tasks Fetch Error Debug]:', taskFetchError)
     } else {
+       console.log('[Tasks Data Debug]:', taskData)
        setTasks(taskData || [])
     }
     setLoading(false)
@@ -59,57 +76,74 @@ export default function TasksPage() {
     if (!newTitle.trim() || !selectedWorkflowId) return
     setCreating(true)
     
-    // DB column: tittle
+    // [SYNC FIX] Insert Task (using title column)
     const { data, error } = await supabase
       .from('tasks')
       .insert([{
         workflow_id: selectedWorkflowId,
-        tittle: newTitle,
+        title: newTitle, // DB Sync: title
         status: 'todo'
       }])
       .select(`
         *,
         workflows (
-          tittle
+          title
         )
       `)
       .single()
 
-    if (!error) {
-       setTasks([data, ...tasks])
-       setNewTitle('')
+    if (error) {
+      console.error('[Task Create Error Debug]:', error)
+      alert("Failed synced Task with DB: " + error.message)
+    } else {
+      console.log('[Task Create Success Debug]:', data)
+      setTasks([data, ...tasks])
+      setNewTitle('')
     }
     setCreating(false)
   }
 
   async function toggleTaskStatus(id, currentStatus) {
     const newStatus = currentStatus === 'done' ? 'todo' : 'done'
-    const { error } = await supabase.from('tasks').update({ status: newStatus }).eq('id', id)
-    if (!error) {
+    const { error } = await supabase
+      .from('tasks')
+      .update({ status: newStatus })
+      .eq('id', id)
+
+    if (error) {
+       console.error('[Task Update Error Debug]:', error)
+    } else {
        setTasks(tasks.map(t => t.id === id ? { ...t, status: newStatus } : t))
     }
   }
 
   async function handleDeleteTask(id) {
-    if (!confirm('Are you sure?')) return
-    const { error } = await supabase.from('tasks').delete().eq('id', id)
-    if (!error) {
+    if (!confirm('Are you sure you want to delete this task objective?')) return
+    
+    const { error } = await supabase
+      .from('tasks')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+       console.error('[Task Delete Error Debug]:', error)
+    } else {
        setTasks(tasks.filter(t => t.id !== id))
     }
   }
 
   return (
-    <div className="space-y-8 animate-fade-in">
+    <div className="space-y-8 animate-fade-in pb-12">
       <div className="flex justify-between items-center px-1">
         <div>
           <h1 className="text-2xl font-bold text-white mb-1">Matrix Task Log</h1>
-          <p className="text-sm text-gray-400">Coordinate individual objectives.</p>
+          <p className="text-sm text-gray-400">Coordinate individual objectives within sequences.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
-         <Card className="p-6 border-[#1e1e2a] bg-[#16161e] lg:sticky lg:top-8 shadow-2xl overflow-hidden relative border-t border-purple-500/20">
-            <h3 className="text-sm font-bold text-white mb-6">New Task Pulse</h3>
+         <Card className="p-6 border-[#1e1e2a] bg-[#16161e] lg:sticky lg:top-8 shadow-2xl overflow-hidden relative border-t-2 border-t-purple-500/30">
+            <h3 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-6">Inject Task Objective</h3>
             <form onSubmit={handleCreateTask} className="space-y-4">
                <div>
                   <label className="text-xs text-gray-500 uppercase tracking-widest block mb-2 font-bold">Assign to Cluster</label>
@@ -120,53 +154,53 @@ export default function TasksPage() {
                     required
                   >
                     {workflows.map(wf => (
-                      <option key={wf.id} value={wf.id}>{wf.tittle}</option>
+                      <option key={wf.id} value={wf.id}>{wf.title}</option>
                     ))}
                   </select>
                </div>
                <Input 
                  label="Task Objective"
-                 placeholder="Pulse Objective X"
+                 placeholder="Specific objective..."
                  value={newTitle}
                  onChange={(e) => setNewTitle(e.target.value)}
                  required
                />
-               <Button type="submit" isLoading={creating} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold h-11">
-                  Add to Matrix
+               <Button type="submit" isLoading={creating} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold h-11">
+                  Register Task
                </Button>
             </form>
          </Card>
 
          <div className="lg:col-span-2 space-y-4">
             {loading ? (
-              <div className="p-8 text-gray-500 font-medium italic">Scanning matrix...</div>
+              <div className="p-8 text-gray-500 font-medium italic">Awaiting pulse...</div>
             ) : tasks.length === 0 ? (
-              <div className="p-16 text-center border-dashed border-[#1e1e2a] opacity-50 flex flex-col items-center">
-                 <p className="text-gray-500 font-medium italic underline decoration-purple-500/10 underline-offset-8">Awaiting operational objective input.</p>
+              <div className="p-16 text-center rounded-xl border-dashed border-2 border-[#1e1e2a] opacity-50 flex flex-col items-center">
+                 <p className="text-gray-500 font-medium italic">Signal matrix empty for current tasks.</p>
               </div>
             ) : (
               tasks.map((task) => (
-                <Card key={task.id} className={`p-5 border-[#1e1e2a] bg-[#16161e] flex justify-between items-center group shadow-lg border-l-4 ${task.status === 'done' ? 'border-l-emerald-500 opacity-60' : 'border-l-purple-500'}`}>
+                <Card key={task.id} className={`p-5 border-[#1e1e2a] bg-[#16161e] flex justify-between items-center group shadow-md border-l-4 ${task.status === 'done' ? 'border-l-emerald-500 opacity-60' : 'border-l-purple-500'}`}>
                    <div className="space-y-1">
                       <div className="flex items-center gap-3">
-                         <Badge className={`${task.status === 'done' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-purple-500/10 text-purple-400'} border-none text-[9px] uppercase tracking-widest font-black`}>
+                         <Badge className={`${task.status === 'done' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-purple-500/10 text-purple-400'} border-none text-[8.5px] uppercase tracking-widest font-black`}>
                             {task.status === 'done' ? 'Resolved' : 'Active'}
                          </Badge>
-                         <span className="text-[10px] text-gray-700 font-black uppercase tracking-widest italic truncate max-w-[150px]">Cluster: {task.workflows?.tittle}</span>
+                         <span className="text-[10px] text-gray-700 font-black uppercase tracking-widest italic truncate max-w-[150px]">Node: {task.workflows?.title}</span>
                       </div>
-                      <h4 className={`text-lg font-bold transition-all ${task.status === 'done' ? 'text-gray-600 line-through' : 'text-white group-hover:text-purple-400'}`}>
-                         {task.tittle}
+                      <h4 className={`text-xl font-bold transition-all italic tracking-tight ${task.status === 'done' ? 'text-gray-600 line-through' : 'text-white'}`}>
+                         {task.title}
                       </h4>
                    </div>
                    <div className="flex gap-2">
                       <Button 
                          onClick={() => toggleTaskStatus(task.id, task.status)}
                          variant="outline" 
-                         className={`text-xs h-8 border-[#272737] hover:bg-emerald-500/10 hover:text-emerald-400 px-4 font-bold transition-all`}
+                         className={`text-xs h-8 px-4 font-bold border-[#272737] transition-all`}
                       >
                          {task.status === 'done' ? 'Reactivate' : 'Resolve'}
                       </Button>
-                      <Button onClick={() => handleDeleteTask(task.id)} variant="outline" className="text-xs h-8 border-[#272737] hover:bg-red-500/10 hover:text-red-500 px-4 font-bold transition-all">Delete</Button>
+                      <Button onClick={() => handleDeleteTask(task.id)} variant="outline" className="text-xs h-8 px-4 font-bold border-[#272737] hover:bg-red-500/10 hover:text-red-500">Delete</Button>
                    </div>
                 </Card>
               ))
