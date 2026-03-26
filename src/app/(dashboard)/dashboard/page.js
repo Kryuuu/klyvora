@@ -45,10 +45,13 @@ export default function DashboardPage() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-12 relative">
+      {/* Background Glow */}
+      <div className="absolute top-0 md:top-[-10%] left-[10%] md:left-[20%] w-[300px] md:w-[600px] h-[300px] md:h-[600px] bg-[#7c3aed]/10 blur-[100px] rounded-full pointer-events-none -z-10" />
+
       {/* SECTION 1: Brand Header */}
-      <div className="text-center md:text-left space-y-4 max-w-2xl">
-         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#7c3aed] text-white shadow-lg mb-2">
+      <div className="text-center md:text-left space-y-4 max-w-2xl animate-slide-up">
+         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#7c3aed] text-white shadow-[0_0_20px_rgba(124,58,237,0.4)] mb-2">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
          </div>
          <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-[#fafafa]">KlyVora AI Workflow</h1>
@@ -63,7 +66,7 @@ export default function DashboardPage() {
                <p className="text-[#a1a1aa] text-sm">Create a new automated sequence in seconds.</p>
             </div>
             <Link href="/generate" className="w-full sm:w-auto">
-               <Button className="w-full text-base font-semibold px-8 py-3.5">
+               <Button className="w-full text-base font-semibold px-8 py-3.5 animate-shimmer overflow-hidden relative border border-[#7c3aed]/50">
                   Generate Workflow
                </Button>
             </Link>
