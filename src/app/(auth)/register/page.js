@@ -23,7 +23,6 @@ export default function RegisterPage() {
     setLoading(true)
     setError(null)
     
-    // 1. Auth Sign Up
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
@@ -33,33 +32,14 @@ export default function RegisterPage() {
     })
 
     if (authError) {
-      console.error('[Register Auth Error Debug]:', authError)
       setError(authError.message)
       setLoading(false)
       return
     }
 
     const { user } = authData
-    console.log('[Register User Debug]:', user)
-
     if (user) {
-      // 2. [STRICT SYNC] Enforce Profile Sync before redirect
-      // This prevents 'workflows_user_id_fkey' violation in subsequent steps.
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .upsert({
-          id: user.id,
-          name: fullName || email.split('@')[0]
-        }, { onConflict: 'id' })
-
-      if (profileError) {
-        console.error('[STRICT SYNC ERROR]: Profile synchronization failed.', profileError)
-        setError("Account created, but Profile Sync failed: " + profileError.message + " (Check RLS Policies)")
-        setLoading(false)
-        return // CRITICAL: STOP HERE
-      }
-
-      console.log('[STRICT SYNC SUCCESS]: Profile created for', user.id)
+      await supabase.from('profiles').upsert({ id: user.id, name: fullName || email.split('@')[0] }, { onConflict: 'id' })
       alert('Registration successful! Please check your email for confirmation.')
       router.push('/login')
     }
@@ -67,62 +47,76 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen items-center justify-center p-4 bg-[#0a0a0f]">
-      <div className="w-full max-w-md space-y-8 animate-fade-in">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2 underline decoration-purple-500/20 underline-offset-8">New Operator</h1>
-          <p className="text-sm text-gray-500 font-medium">Initialize your KlyVora node</p>
+    <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#09090b] relative overflow-hidden">
+      {/* Background Glows */}
+      <div className="absolute top-[-20%] right-[-20%] w-[600px] h-[600px] bg-purple-600/10 blur-[150px] rounded-full" />
+      <div className="absolute bottom-[-20%] left-[-20%] w-[600px] h-[600px] bg-indigo-600/10 blur-[150px] rounded-full" />
+
+      <div className="w-full max-w-lg relative z-10 animate-slide-up">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-tr from-purple-600 to-purple-400 shadow-2xl shadow-purple-500/20 mb-6">
+             <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          </div>
+          <h1 className="text-4xl font-black text-white italic tracking-tighter mb-2 underline decoration-purple-500/20 underline-offset-8">New Operator</h1>
+          <p className="text-sm text-zinc-500 font-medium tracking-wide uppercase font-bold">Initialize Neural Node Interface</p>
         </div>
 
-        <Card className="p-8 border-[#1e1e2a] bg-[#16161e] shadow-2xl">
+        <Card className="p-10 border border-white/5 bg-[#12121a]/60 backdrop-blur-2xl shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
           <form onSubmit={handleRegister} className="space-y-6">
             {error && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold text-center leading-relaxed">
+              <div className="p-4 rounded-2xl bg-danger/10 border border-danger/20 text-danger text-[10px] uppercase font-black tracking-widest text-center animate-fade-in shadow-lg shadow-danger/10">
                 {error}
               </div>
             )}
             
-            <Input 
-              label="Operator Name" 
-              type="text" 
-              placeholder="Elon Musk"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-              required
-            />
+            <div className="space-y-4">
+               <Input 
+                 label="Protocol: Operator Name" 
+                 type="text" 
+                 placeholder="Elon Musk"
+                 value={fullName}
+                 onChange={(e) => setFullName(e.target.value)}
+                 className="bg-[#09090b]/50 border-white/5 focus:border-purple-500 h-10"
+                 required
+               />
 
-            <Input 
-              label="Neural ID (Email)" 
-              type="email" 
-              placeholder="user@klyvora.ai"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            
-            <Input 
-              label="Secret Key (Password)" 
-              type="password" 
-              placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              minLength={6}
-            />
+               <Input 
+                 label="Protocol: Neural Identifier" 
+                 type="email" 
+                 placeholder="name@cluster.ai"
+                 value={email}
+                 onChange={(e) => setEmail(e.target.value)}
+                 className="bg-[#09090b]/50 border-white/5 focus:border-purple-500 h-10"
+                 required
+               />
+               
+               <Input 
+                 label="Protocol: Secret Key" 
+                 type="password" 
+                 placeholder="••••••••"
+                 value={password}
+                 onChange={(e) => setPassword(e.target.value)}
+                 className="bg-[#09090b]/50 border-white/5 focus:border-purple-500 h-10"
+                 required
+                 minLength={6}
+               />
+            </div>
             
             <Button 
-              type="submit" 
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold h-12 uppercase text-xs tracking-widest shadow-[0_10px_30px_rgba(168,85,247,0.2)]" 
-              isLoading={loading}
+               type="submit" 
+               className="w-full h-14 font-black uppercase text-xs tracking-[0.2em] shadow-2xl shadow-purple-600/20" 
+               isLoading={loading}
             >
-              Boot Sequence
+               Execute Initialization
             </Button>
             
-            <div className="text-center text-xs text-gray-600 mt-6 pt-6 border-t border-[#1e1e2a] font-bold uppercase tracking-widest">
-              Already Online?{' '}
-              <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors">
-                Authorize
-              </Link>
+            <div className="text-center pt-8 border-t border-white/5 mt-4">
+              <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Already Active?</span>
+              <div className="mt-4">
+                <Link href="/login">
+                   <Button variant="outline" className="w-full h-12 text-[10px] uppercase font-black tracking-[0.1em]">Re-Authorize Signal</Button>
+                </Link>
+              </div>
             </div>
           </form>
         </Card>

@@ -50,60 +50,69 @@ export default function SubscriptionPage() {
     }
   }
 
-  if (checking) return <div className="p-8 text-gray-500 font-medium">Verifying Neural Subscription...</div>
+  if (checking) return <div className="p-8 text-zinc-500 font-black uppercase tracking-[0.4em] text-xs animate-pulse italic">Verifying Neural Subscription...</div>
 
   const isPro = subscription?.plan === 'pro' && subscription?.status === 'active'
 
   return (
-    <div className="max-w-4xl mx-auto space-y-12 animate-fade-in pb-20">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-bold text-white">Pro Access Engine</h1>
-        <p className="text-sm text-gray-500 max-w-lg mx-auto">Upgrade to the pro-tier to unlock unlimited neural throughput.</p>
+    <div className="max-w-5xl mx-auto space-y-16 animate-slide-up pb-24">
+      <div className="text-center space-y-4">
+        <Badge className="bg-purple-500/10 text-purple-400 border-none px-6 py-2 font-black italic tracking-[0.2em] text-[10px]">Neural Tier Selection</Badge>
+        <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase underline decoration-purple-500/20 underline-offset-[12px]">Pro Access Engine</h1>
+        <p className="text-zinc-500 max-w-lg mx-auto font-medium italic">Upgrade to the pro-tier to unlock unlimited neural throughput across all clusters.</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-start">
-        <Card className="p-8 border-[#1e1e2a] bg-[#16161e] border-l-4 border-l-purple-500 flex flex-col justify-between h-full min-h-[300px]">
-          <div>
-            <Badge status={isPro ? 'done' : 'default'} className="mb-6 bg-purple-500/10 text-purple-400 border-none font-bold text-[10px]">Current Status</Badge>
-            <h2 className="text-3xl font-bold text-white mb-4 uppercase tracking-tighter">{isPro ? 'Pro Operator' : 'Free Operator'}</h2>
-            <p className="text-sm text-gray-500 leading-relaxed font-medium">Your account is currently running on the limited operator tier (3 workflows max).</p>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
+        <Card className="p-10 border-white/5 bg-[#0a0a0f] border-t-4 border-t-purple-500 flex flex-col justify-between h-full min-h-[400px] shadow-2xl">
+          <div className="space-y-8">
+            <div className="space-y-2">
+               <Badge status={isPro ? 'done' : 'default'} className="px-4 font-black uppercase tracking-widest text-[9px]">Identity Verification</Badge>
+               <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase">{isPro ? 'Pro Operator' : 'Free Operator'}</h2>
+            </div>
+            <p className="text-zinc-500 leading-relaxed font-medium italic opacity-80">Your neural node is currently restricted to the Level-1 Operator tier (Max 3 Active Clusters). Upgrade to expand throughput.</p>
           </div>
-          <div className="mt-8 pt-6 border-t border-[#1e1e2a] flex flex-col space-y-1">
-             <span className="text-[10px] text-gray-700 font-black uppercase tracking-widest leading-none">Identity Linked</span>
-             <p className="text-xs text-gray-400 font-mono italic opacity-50 truncate">{user?.email}</p>
+          <div className="mt-12 pt-8 border-t border-white/5 flex flex-col space-y-2">
+             <span className="text-[10px] text-zinc-700 font-black uppercase tracking-[0.3em] leading-none">Logged Identifier</span>
+             <p className="text-xs text-white font-black italic opacity-50 truncate tracking-tight">{user?.email}</p>
           </div>
         </Card>
 
         {!isPro ? (
-          <Card className="p-8 border-purple-500/30 bg-purple-500/5 shadow-2xl flex flex-col justify-between h-full min-h-[300px]">
-             <div>
-                <div className="flex justify-between items-start mb-8">
-                   <h2 className="text-2xl font-bold text-white italic tracking-tighter uppercase">Unlimited</h2>
+          <Card className="p-10 border-purple-500/20 bg-purple-600/5 shadow-3xl shadow-purple-600/10 flex flex-col justify-between h-full min-h-[400px] relative overflow-hidden group">
+             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/10 blur-3xl rounded-full translate-x-12 translate-y-[-12px] group-hover:bg-purple-600/20 transition-all duration-700" />
+             <div className="relative z-10">
+                <div className="flex justify-between items-start mb-12">
+                   <div>
+                      <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">Unlimited</h2>
+                      <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Protocol Expansion</p>
+                   </div>
                    <div className="text-right">
-                      <span className="text-2xl font-black text-white italic">Rp49k</span>
-                      <span className="text-[10px] text-gray-600 block font-bold uppercase tracking-widest mt-1">Single Charge</span>
+                      <span className="text-4xl font-black text-white italic tracking-tighter underline decoration-purple-500/40">Rp49k</span>
+                      <span className="text-[9px] text-zinc-600 block font-black uppercase tracking-widest mt-2 italic">Standard Single Charge</span>
                    </div>
                 </div>
-                <ul className="space-y-3 mb-10">
-                  {['Unlimited Workflows', 'Full Gemini 2.0 Logic', 'Priority Signal Response', 'Operational Node Log'].map((feat, i) => (
-                    <li key={i} className="flex items-center text-xs font-bold text-gray-400">
-                      <svg className="w-4 h-4 text-purple-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                <ul className="space-y-5 mb-12">
+                  {['Unlimited Neural Clusters', 'Access to Gemini 2.0 Force', 'Priority Signal Response', 'Full Operational Audit Log'].map((feat, i) => (
+                    <li key={i} className="flex items-center text-xs font-black italic text-zinc-400 uppercase tracking-tight">
+                      <div className="w-5 h-5 rounded-lg bg-purple-500/20 flex items-center justify-center mr-4">
+                         <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
+                      </div>
                       {feat}
                     </li>
                   ))}
                 </ul>
              </div>
-             <Button onClick={handleCheckout} isLoading={loading} className="w-full bg-purple-600 hover:bg-purple-700 h-14 font-black uppercase text-xs tracking-widest shadow-[0_10px_30px_rgba(168,85,247,0.3)]">
-                Upgrade Operation Node
+             <Button onClick={handleCheckout} isLoading={loading} className="w-full h-16 bg-purple-500 hover:bg-purple-600 font-black uppercase text-xs tracking-[0.3em] shadow-purple-600/30 italic">
+                Initialize Expansion Signal
              </Button>
           </Card>
         ) : (
-          <Card className="p-8 border-emerald-500/20 bg-emerald-500/5 shadow-2xl h-full flex flex-col items-center justify-center text-center">
-             <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center mb-6">
+          <Card className="p-12 border-emerald-500/20 bg-emerald-500/5 shadow-2xl h-full flex flex-col items-center justify-center text-center">
+             <div className="w-20 h-20 rounded-[32px] bg-emerald-500/10 flex items-center justify-center mb-10 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
                  <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
              </div>
-             <h3 className="text-xl font-bold text-white mb-2">Maximum Capacity Active</h3>
-             <p className="text-sm text-gray-500 font-medium">Your cluster is currently running at unlimited operational capacity.</p>
+             <h3 className="text-3xl font-black text-white mb-4 italic tracking-tighter uppercase italic">Maximum Capacity: ONLINE</h3>
+             <p className="text-sm text-zinc-600 font-medium italic max-w-xs mx-auto">Your neural cluster is currently running at unlimited operational capacity. All protocols are unrestricted.</p>
           </Card>
         )}
       </div>
