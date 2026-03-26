@@ -53,8 +53,21 @@ export default function WorkflowsPage() {
 
   async function handleDeleteWorkflow(id) {
     if (!confirm('Are you sure you want to delete this sequence?')) return
-    const { error } = await supabase.from('workflows').delete().eq('id', id)
-    if (!error) setWorkflows(workflows.filter(w => w.id !== id))
+    
+    try {
+      const { error } = await supabase.from('workflows').delete().eq('id', id)
+      
+      if (error) {
+        console.error('Delete error:', error)
+        alert(`Failed to delete: ${error.message}. Please check if there are tasks linked to this workflow.`)
+        return
+      }
+      
+      setWorkflows(workflows.filter(w => w.id !== id))
+    } catch (err) {
+      console.error('Unexpected error:', err)
+      alert('An unexpected error occurred while deleting.')
+    }
   }
 
   return (
