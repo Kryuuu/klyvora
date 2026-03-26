@@ -27,19 +27,12 @@ export default function WorkflowsPage() {
     setLoading(true)
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     
-    console.log('[Workflows Flow Debug]:', user)
-    if (authError) {
-      console.error('[Workflows Session Error Check]:', authError)
+    console.log('[Workflows Check User]:', user)
+    if (authError || !user) {
       router.push('/login')
       return
     }
 
-    if (!user) {
-      router.push('/login')
-      return
-    }
-
-    // [SYNC FIX] Workflows table (title, user_id, created_at)
     const { data, error } = await supabase
       .from('workflows')
       .select('*')
@@ -49,7 +42,6 @@ export default function WorkflowsPage() {
     if (error) {
        console.error('[Workflows Fetch Error Debug]:', error)
     } else {
-       console.log('[Workflows Data Debug]:', data)
        setWorkflows(data || [])
     }
     setLoading(false)
@@ -63,11 +55,18 @@ export default function WorkflowsPage() {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
-    // 1. [SYNC FIX] Ensure Profile Sync JIT
-    await supabase.from('profiles').upsert({ 
-      id: user.id, 
-      name: user.email.split('@')[0] 
-    }, { onConflict: 'id' })
+    // 1. [STRICT SYNC] Ensure Profile exists before Insert
+    // This is the CRITICAL FIX for 'workflows_user_id_fkey' violation.
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .upsert({ id: user.id, name: user.email.split('@')[0] }, { onConflict: 'id' })
+
+    if (profileError) {
+       console.error('[STRICT SYNC ERROR]: Workflow creation aborted because profile sync failed.', profileError)
+       alert("Profile Sync Failed: " + profileError.message + " Workflow cannot be created.")
+       setCreating(false)
+       return // STOP
+    }
 
     // 2. [SYNC FIX] Insert Workflow (using title column)
     const { data, error } = await supabase
@@ -82,7 +81,7 @@ export default function WorkflowsPage() {
 
     if (error) {
       console.error('[Workflow Create Error Debug]:', error)
-      alert("Failed to sync with DB: " + error.message)
+      alert("Workflow DB Sync Failed: " + error.message)
     } else {
       console.log('[Workflow Create Success Debug]:', data)
       setWorkflows([data, ...workflows])
@@ -94,48 +93,24 @@ export default function WorkflowsPage() {
 
   async function handleDeleteWorkflow(id) {
     if (!confirm('Are you sure you want to delete this sequence?')) return
-    
-    const { error } = await supabase
-      .from('workflows')
-      .delete()
-      .eq('id', id)
-
-    if (error) {
-      console.error('[Workflow Delete Error Debug]:', error)
-    } else {
-      setWorkflows(workflows.filter(w => w.id !== id))
-    }
+    const { error } = await supabase.from('workflows').delete().eq('id', id)
+    if (!error) setWorkflows(workflows.filter(w => w.id !== id))
   }
 
   return (
     <div className="space-y-8 animate-fade-in pb-12">
       <div className="flex justify-between items-center px-1">
-        <div>
-          <h1 className="text-2xl font-bold text-white mb-1">Workflows Log</h1>
-          <p className="text-sm text-gray-400">Manage all operational sequences.</p>
-        </div>
+        <h1 className="text-2xl font-bold text-white tracking-tight">Workflows Log</h1>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
          <Card className="p-6 border-[#1e1e2a] bg-[#16161e]">
-            <h3 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-6">New Protocol</h3>
+            <h3 className="text-xs font-bold text-purple-400 uppercase tracking-widest mb-6">Create New Protocol</h3>
             <form onSubmit={handleCreateWorkflow} className="space-y-4">
-               <Input 
-                 label="Operation Name"
-                 placeholder="Pulse Sequence Alpha"
-                 value={newTitle}
-                 onChange={(e) => setNewTitle(e.target.value)}
-                 required
-               />
-               <Input 
-                 label="Category"
-                 placeholder="Standard"
-                 value={newCategory}
-                 onChange={(e) => setNewCategory(e.target.value)}
-                 required
-               />
+               <Input label="Title" placeholder="Pulse Sequence X" value={newTitle} onChange={(e) => setNewTitle(e.target.value)} required />
+               <Input label="Category" placeholder="Standard" value={newCategory} onChange={(e) => setNewCategory(e.target.value)} required />
                <Button type="submit" isLoading={creating} className="w-full bg-purple-600 hover:bg-purple-700 h-11 font-bold">
-                  Create Pulse
+                  Register Pulse
                </Button>
             </form>
          </Card>
@@ -144,22 +119,19 @@ export default function WorkflowsPage() {
             {loading ? (
               <div className="p-8 text-gray-500 font-medium italic">Loading telemetry...</div>
             ) : workflows.length === 0 ? (
-              <div className="p-16 text-center rounded-xl border-2 border-dashed border-[#1e1e2a] opacity-50 flex flex-col items-center">
-                 <p className="text-gray-500 font-medium">No active signals found.</p>
-              </div>
+              <div className="p-16 text-center rounded-xl border-dashed border-2 border-[#1e1e2a] opacity-50 font-bold uppercase tracking-widest text-xs text-gray-700">No active signals found.</div>
             ) : (
               workflows.map((wf) => (
-                <Card key={wf.id} className="p-5 border-[#1e1e2a] bg-[#16161e] flex justify-between items-center group shadow-md border-l-2 border-l-transparent hover:border-l-purple-500 transition-all">
+                <Card key={wf.id} className="p-5 border-[#1e1e2a] bg-[#16161e] flex justify-between items-center group shadow-md hover:border-purple-500/20 transition-all">
                    <div>
                       <Badge className="bg-purple-500/10 text-purple-400 border-none mb-3 block w-max uppercase tracking-widest text-[8px] font-bold">{wf.category || 'Standard'}</Badge>
-                      <h4 className="text-lg font-bold text-white italic tracking-tight">{wf.title}</h4>
-                      <p className="text-[10px] text-gray-600 font-bold uppercase tracking-widest mt-2">{new Date(wf.created_at).toLocaleDateString()}</p>
+                      <h4 className="text-lg font-bold text-white italic tracking-tight uppercase">{wf.title}</h4>
                    </div>
                    <div className="flex gap-2">
                       <Link href={`/tasks`}>
                          <Button variant="outline" className="text-xs h-8 px-4 font-bold border-[#272737]">Tasks</Button>
                       </Link>
-                      <Button onClick={() => handleDeleteWorkflow(wf.id)} variant="outline" className="text-xs h-8 px-4 font-bold border-[#272737] hover:bg-red-500/10 hover:text-red-500">Delete</Button>
+                      <Button onClick={() => handleDeleteWorkflow(wf.id)} variant="outline" className="text-xs h-8 px-4 font-bold border-[#272737] hover:border-red-500/10">Delete</Button>
                    </div>
                 </Card>
               ))

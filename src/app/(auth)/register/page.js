@@ -33,19 +33,18 @@ export default function RegisterPage() {
     })
 
     if (authError) {
-      console.error('[Register Error Debug]:', authError)
+      console.error('[Register Auth Error Debug]:', authError)
       setError(authError.message)
       setLoading(false)
       return
     }
 
     const { user } = authData
-    console.log('[Register Session Debug]:', user)
+    console.log('[Register User Debug]:', user)
 
     if (user) {
-      console.log('[SCHEMA SYNC] JIT Profile Sync for user:', user.id)
-      
-      // 2. [SYNC FIX] Profiles table (id, name, created_at)
+      // 2. [STRICT SYNC] Enforce Profile Sync before redirect
+      // This prevents 'workflows_user_id_fkey' violation in subsequent steps.
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
@@ -54,13 +53,14 @@ export default function RegisterPage() {
         }, { onConflict: 'id' })
 
       if (profileError) {
-        console.error('[Profile Sync Error]:', profileError)
-        setError("Account created, but profile failed: " + profileError.message)
+        console.error('[STRICT SYNC ERROR]: Profile synchronization failed.', profileError)
+        setError("Account created, but Profile Sync failed: " + profileError.message + " (Check RLS Policies)")
         setLoading(false)
-        return
+        return // CRITICAL: STOP HERE
       }
 
-      alert('Registration successful! Please check your email.')
+      console.log('[STRICT SYNC SUCCESS]: Profile created for', user.id)
+      alert('Registration successful! Please check your email for confirmation.')
       router.push('/login')
     }
     setLoading(false)
@@ -70,14 +70,14 @@ export default function RegisterPage() {
     <div className="flex min-h-screen items-center justify-center p-4 bg-[#0a0a0f]">
       <div className="w-full max-w-md space-y-8 animate-fade-in">
         <div className="text-center">
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">Create Account</h1>
-          <p className="text-sm text-gray-400">Join KlyVora AI Workflow</p>
+          <h1 className="text-3xl font-bold tracking-tight text-white mb-2 underline decoration-purple-500/20 underline-offset-8">New Operator</h1>
+          <p className="text-sm text-gray-500 font-medium">Initialize your KlyVora node</p>
         </div>
 
-        <Card className="p-8 border-[#1e1e2a] bg-[#16161e]">
+        <Card className="p-8 border-[#1e1e2a] bg-[#16161e] shadow-2xl">
           <form onSubmit={handleRegister} className="space-y-6">
             {error && (
-              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 text-sm text-center">
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-xs font-bold text-center leading-relaxed">
                 {error}
               </div>
             )}
@@ -85,14 +85,14 @@ export default function RegisterPage() {
             <Input 
               label="Operator Name" 
               type="text" 
-              placeholder="Name..."
+              placeholder="Elon Musk"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
             />
 
             <Input 
-              label="Email Address" 
+              label="Neural ID (Email)" 
               type="email" 
               placeholder="user@klyvora.ai"
               value={email}
@@ -101,7 +101,7 @@ export default function RegisterPage() {
             />
             
             <Input 
-              label="Password" 
+              label="Secret Key (Password)" 
               type="password" 
               placeholder="••••••••"
               value={password}
@@ -112,16 +112,16 @@ export default function RegisterPage() {
             
             <Button 
               type="submit" 
-              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold h-11" 
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold h-12 uppercase text-xs tracking-widest shadow-[0_10px_30px_rgba(168,85,247,0.2)]" 
               isLoading={loading}
             >
-              Sign Up
+              Boot Sequence
             </Button>
             
-            <div className="text-center text-sm text-gray-400 mt-6 pt-6 border-t border-[#272737]">
-              Already using KlyVora?{' '}
-              <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors font-medium">
-                Log In
+            <div className="text-center text-xs text-gray-600 mt-6 pt-6 border-t border-[#1e1e2a] font-bold uppercase tracking-widest">
+              Already Online?{' '}
+              <Link href="/login" className="text-purple-400 hover:text-purple-300 transition-colors">
+                Authorize
               </Link>
             </div>
           </form>
