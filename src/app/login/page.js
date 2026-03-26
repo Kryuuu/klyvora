@@ -38,21 +38,19 @@ export default function LoginPage() {
     const { user } = authData
 
     if (user) {
-      console.log('[DEBUG] User logged in:', user.id)
+      console.log('[SCHEMA SYNC] Authenticated. Verifying profile...', user.id)
       
-      // 2. [SYNC CHECK] Ensure profile exists in DB
-      // We upsert here to catch any legacy users who don't have a profile yet
-      // This is crucial to prevent Foreign Key errors when they try to save workflows
+      // 2. [SYNC CHECK] Sync profile minimal (id, name)
+      // Note: 'Create_at' is managed by Supabase DB default with capital 'C'
       const { error: profileError } = await supabase
         .from('profiles')
         .upsert({
-           id: user.id, // Primary Key
+           id: user.id,
            name: user.email.split('@')[0]
         }, { onConflict: 'id' })
 
       if (profileError) {
-        console.warn('[Profile Sync Alarm]:', profileError.message)
-        // We log it but don't block login, as the user is authenticated
+        console.warn('[Session Alarm]: Profile sync skipped:', profileError.message)
       }
 
       router.push('/dashboard')
@@ -65,23 +63,23 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center p-4 bg-[#0a0a0f]">
       <div className="w-full max-w-md animate-fade-in">
         <div className="text-center mb-10 space-y-2">
-          <h1 className="text-5xl font-extrabold tracking-tighter text-white">
+          <h1 className="text-5xl font-black tracking-tighter text-white italic">
             Kly<span className="text-purple-500">Vora</span>
           </h1>
-          <p className="text-gray-500 font-bold uppercase tracking-widest text-xs">AI Automation SaaS Engine</p>
+          <p className="text-gray-500 font-black uppercase tracking-[0.3em] text-[10px]">Matrix Terminal Interface</p>
         </div>
 
         <Card className="p-8 border-[#272737] bg-[#16161e] shadow-[0_30px_60px_rgba(0,0,0,0.5)]">
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-medium text-center">
+              <div className="p-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-400 text-sm font-black text-center">
                 {error}
               </div>
             )}
             
             <Input 
-              label="Account Identity" 
-              labelClassName="text-gray-400 font-bold uppercase text-[10px] tracking-widest"
+              label="Neural ID (Email)" 
+              labelClassName="text-gray-400 font-black uppercase text-[10px] tracking-widest"
               type="email" 
               placeholder="user@klyvora.ai"
               value={email}
@@ -90,8 +88,8 @@ export default function LoginPage() {
             />
             
             <Input 
-              label="Private Password" 
-              labelClassName="text-gray-400 font-bold uppercase text-[10px] tracking-widest"
+              label="Secret Key (Password)" 
+              labelClassName="text-gray-400 font-black uppercase text-[10px] tracking-widest"
               type="password" 
               placeholder="••••••••"
               value={password}
@@ -101,13 +99,13 @@ export default function LoginPage() {
             
             <Button 
               type="submit" 
-              className="w-full h-12 bg-white hover:bg-white/90 text-black font-black text-sm uppercase tracking-widest transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)]" 
+              className="w-full h-12 bg-white hover:bg-white/90 text-black font-black text-xs uppercase tracking-[0.2em] transition-all shadow-[0_10px_30px_rgba(255,255,255,0.1)]" 
               isLoading={loading}
             >
-              Sign In to Terminal
+              Authorize Node
             </Button>
             
-            <p className="text-center text-sm text-gray-400 mt-6">
+            <p className="text-center text-sm text-gray-400 mt-6 font-sans">
               New to the platform?{' '}
               <Link href="/register" className="text-purple-400 hover:text-purple-300 transition-colors font-bold">
                 Create Account

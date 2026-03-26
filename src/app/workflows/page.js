@@ -31,6 +31,7 @@ export default function WorkflowsPage() {
       return
     }
 
+    // SCHEMA SYNC: table 'workflows' uses 'tittle'
     const { data, error } = await supabase
       .from('workflows')
       .select('*')
@@ -52,27 +53,26 @@ export default function WorkflowsPage() {
     setCreating(true)
     const { data: { user } } = await supabase.auth.getUser()
     
-    // 1. [SYNC CHECK] Ensue profile exists before inserting workflow (FK Safety)
+    // Sync profile minimal (ERD: profiles has id, name)
     await supabase.from('profiles').upsert({
       id: user.id,
       name: user.email.split('@')[0]
     }, { onConflict: 'id' })
 
-    // 2. Insert Workflow
+    // SCHEMA SYNC: table 'workflows' uses 'tittle'
     const { data, error } = await supabase
       .from('workflows')
       .insert([{
         user_id: user.id,
-        tittle: newTitle, // Using 'tittle' as per current DB schema
-        category: newCategory,
-        created_at: new Date().toISOString()
+        tittle: newTitle, 
+        category: newCategory
       }])
       .select()
       .single()
 
     if (error) {
-      console.error('[Workflow Creation Error]:', error)
-      alert("Failed to create workflow: " + error.message)
+      console.error('[Schema Conflict]: Workflow creation failed:', error.message)
+      alert("Failed sync with DB: " + error.message)
     } else {
       setWorkflows([data, ...workflows])
       setNewTitle('')
@@ -94,42 +94,41 @@ export default function WorkflowsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0f] p-4 lg:p-12 space-y-12 max-w-7xl mx-auto animate-fade-in">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <div>
-           <Link href="/dashboard" className="text-purple-400 text-xs font-bold uppercase tracking-widest hover:text-white transition-colors">&larr; Back to Command Center</Link>
-           <h1 className="text-4xl lg:text-5xl font-black text-white mt-4 italic">
-             Operational <span className="text-purple-500">Log</span>
+    <div className="animate-fade-in pb-20 lg:pb-0 h-full max-w-7xl mx-auto space-y-12">
+      
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 text-left">
+        <div className="space-y-2">
+           <Badge status="default" className="bg-purple-500/10 text-purple-400 border-none uppercase tracking-[.2em] text-[9px] font-black italic">Log Terminal</Badge>
+           <h1 className="text-4xl lg:text-6xl font-black text-white italic tracking-tighter uppercase leading-none">
+             Neural <span className="text-purple-500">Log</span>
            </h1>
-           <p className="text-gray-500 font-medium">Manage and deploy automated sequences natively.</p>
+           <p className="text-gray-500 font-bold uppercase tracking-widest text-[10px] mt-2 italic shadow-glow-text">Manage all created operational sequences.</p>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 items-start">
          
-         {/* Creation Form */}
+         {/* Form Create */}
          <Card className="p-8 border-[#272737] bg-[#16161e] lg:sticky lg:top-8 shadow-2xl overflow-hidden relative border-t-4 border-t-purple-500">
-            <h3 className="text-sm font-black text-purple-400 uppercase tracking-[.2em] mb-6">Initiate Sequence</h3>
+            <h3 className="text-xs font-black text-purple-400 uppercase tracking-widest mb-8 italic">New Protocol</h3>
             <form onSubmit={handleCreateWorkflow} className="space-y-6">
                <Input 
                  label="Operation Name"
-                 labelClassName="text-gray-600 uppercase text-[10px] font-black tracking-widest"
-                 placeholder="E.g. SaaS Onboarding Flow"
+                 labelClassName="text-gray-700 uppercase text-[10px] font-black tracking-widest italic"
+                 placeholder="Manual override title..."
                  value={newTitle}
                  onChange={(e) => setNewTitle(e.target.value)}
                  required
-                 className="bg-[#0f0f14] border-[#272737] text-white h-12 rounded-xl focus:border-purple-500"
                />
                <Input 
                  label="Operation Category"
-                 labelClassName="text-gray-600 uppercase text-[10px] font-black tracking-widest"
-                 placeholder="E.g. AI Automation"
+                 labelClassName="text-gray-700 uppercase text-[10px] font-black tracking-widest italic"
+                 placeholder="Standard"
                  value={newCategory}
                  onChange={(e) => setNewCategory(e.target.value)}
                  required
-                 className="bg-[#0f0f14] border-[#272737] text-white h-12 rounded-xl focus:border-purple-500"
                />
-               <Button type="submit" isLoading={creating} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black h-12 uppercase text-xs tracking-widest shadow-[0_10px_30px_rgba(168,85,247,0.3)]">
+               <Button type="submit" isLoading={creating} className="w-full bg-purple-600 hover:bg-purple-700 text-white font-black h-14 uppercase text-xs tracking-[0.2em] shadow-[0_10px_30px_rgba(168,85,247,0.3)] mt-4">
                   Register Operation
                </Button>
             </form>
@@ -138,25 +137,25 @@ export default function WorkflowsPage() {
          {/* Workflows List */}
          <div className="lg:col-span-2 space-y-4">
             {loading ? (
-              <div className="flex justify-center p-20"><span className="animate-pulse text-purple-500 font-black uppercase tracking-widest">Scanning Log...</span></div>
+              <div className="flex justify-center p-20 animate-pulse text-purple-500 font-black uppercase tracking-widest italic text-xs">Awaiting Signal...</div>
             ) : workflows.length === 0 ? (
-              <Card className="p-12 text-center border-dashed border-[#272737] bg-transparent opacity-50 flex flex-col items-center">
-                 <p className="text-gray-600 font-bold mb-4 italic text-lg">"The Log Is Empty. Awaiting Neural Input."</p>
-                 <p className="text-xs text-gray-700 max-w-[300px] leading-relaxed">No data detected in the workflow table. Use the form on the left to initiate a sequence.</p>
+              <Card className="p-16 text-center border-dashed border-[#272737] bg-transparent opacity-40 flex flex-col items-center">
+                 <p className="text-gray-600 font-black text-lg italic tracking-[0.1em] uppercase">No active log found.</p>
+                 <p className="text-[10px] text-gray-700 max-w-[300px] leading-relaxed mt-4 font-black uppercase tracking-widest">Awaiting manual or AI pulse injection.</p>
               </Card>
             ) : (
               workflows.map((wf) => (
-                <Card key={wf.id} className="p-6 border-[#272737] bg-[#16161e]/80 hover:bg-[#16161e] transition-all group flex justify-between items-center shadow-lg hover:shadow-purple-500/10 active:scale-[0.99] cursor-default">
-                   <div>
-                      <Badge status="default" className="mb-3 bg-purple-500/10 text-purple-400 border-none uppercase tracking-[0.1em] text-[9px]">{wf.category || 'Standard'}</Badge>
-                      <h4 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors">{wf.tittle}</h4>
-                      <p className="text-xs text-gray-600 mt-2">Initialized on {new Date(wf.created_at).toLocaleString()}</p>
+                <Card key={wf.id} className="p-6 border-[#272737] bg-[#16161e] hover:bg-[#1a1a24] transition-all group flex flex-col sm:flex-row justify-between items-start sm:items-center shadow-lg border-l-4 border-l-transparent hover:border-l-purple-500 gap-6">
+                   <div className="space-y-2">
+                      <Badge className="bg-purple-500/10 text-purple-400 border-none uppercase tracking-[0.1em] text-[8px] font-black">{wf.category || 'Standard'}</Badge>
+                      <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter group-hover:text-purple-400 transition-colors leading-none">{wf.tittle}</h4>
+                      <p className="text-[10px] text-gray-700 font-black tracking-[0.1em] uppercase mt-2 italic">Initialized: {new Date(wf.created_at).toLocaleDateString()}</p>
                    </div>
-                   <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Link href={`/tasks`}>
-                         <Button variant="outline" className="text-[10px] font-black uppercase tracking-widest border-[#272737] h-8 hover:bg-white/5 transition-colors">Tasks</Button>
+                   <div className="flex gap-4 w-full sm:w-auto">
+                      <Link href={`/tasks`} className="flex-1">
+                         <Button variant="outline" className="w-full text-[10px] font-black uppercase tracking-widest border-[#272737] h-10 hover:bg-white/5 transition-all italic">Tasks</Button>
                       </Link>
-                      <Button onClick={() => handleDeleteWorkflow(wf.id)} variant="outline" className="text-[10px] font-black uppercase tracking-widest border-[#272737] h-8 hover:bg-red-500/10 hover:text-red-500 transition-colors">Delete</Button>
+                      <Button onClick={() => handleDeleteWorkflow(wf.id)} variant="outline" className="flex-1 text-[10px] font-black uppercase tracking-widest border-[#272737] h-10 hover:bg-red-500/10 hover:text-red-500 transition-all italic">Purge</Button>
                    </div>
                 </Card>
               ))
