@@ -4,7 +4,7 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' })
 
 export const metadata = {
-  title: "KlyVora | AI Workflow Automation",
+  title: "KlyVora",
   description: "Modern SaaS web app for AI-powered workflow automation.",
 }
 

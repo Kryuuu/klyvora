@@ -18,10 +18,12 @@ export function Sidebar({ onNavigate }) {
       {/* Brand Header */}
       <div className="h-16 flex items-center px-6 border-b border-[#3f3f46]">
         <Link href="/dashboard" className="flex items-center space-x-3" onClick={onNavigate}>
-           <div className="w-6 h-6 rounded bg-[#7c3aed] flex items-center justify-center">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+           <div className="w-8 h-8 rounded-lg bg-[#7c3aed] flex items-center justify-center shadow-lg shadow-purple-500/20 transition-all group-hover:scale-110">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              </svg>
            </div>
-           <span className="font-semibold text-lg text-white">KlyVora</span>
+           <span className="font-bold text-xl tracking-tight text-white">KlyVora</span>
         </Link>
       </div>
       
@@ -50,7 +52,7 @@ export function Sidebar({ onNavigate }) {
       </div>
 
       <div className="p-4 border-t border-[#3f3f46]">
-         <div className="text-xs text-[#a1a1aa] px-2 text-center">Version 3.0 (Clean)</div>
+         <div className="text-xs text-[#a1a1aa] px-2 text-center">KlyVora</div>
       </div>
     </div>
   )

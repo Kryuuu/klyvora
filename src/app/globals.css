@@ -100,3 +100,14 @@ body {
   background-image: radial-gradient(var(--border) 1px, transparent 1px);
   background-size: 20px 20px;
 }
+
+/* AI Atmospheric Effects */
+@keyframes flowGradient {
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+  50% { transform: translate(-30%, -40%) scale(1.2); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+}
+
+.animate-glow-flow {
+  animation: flowGradient 15s ease-in-out infinite;
+}
