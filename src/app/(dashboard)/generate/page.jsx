@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { Card } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabaseClient"
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Badge } from "@/components/ui/Badge"
@@ -47,7 +47,7 @@ export default function GeneratePage() {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
 
-      if (count >= 3) {
+      if (count && count >= 3) {
         setIsFreeLimit(true)
       }
       setIsChecking(false)
@@ -67,7 +67,26 @@ export default function GeneratePage() {
       // 1. Get current user
       const { data: { user } } = await supabase.auth.getUser()
 
-      // 2. Call backend /api/ai
+      if (!user) throw new Error("Session expired. Please login again.")
+
+      console.log('[DEBUG] Generating for user:', user.id)
+
+      // 2. [CORE FIX] Sync profile first to prevent FK violation error
+      // This ensures the row exists in 'profiles' before 'workflows' references it
+      const { error: syncError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          user_id: user.id,
+          name: user.user_metadata?.full_name || 'KlyVora User'
+        }, { onConflict: 'id' })
+
+      if (syncError) {
+        console.error('[Profile Sync Error]:', syncError)
+        throw new Error("Failed to sync user profile: " + syncError.message)
+      }
+
+      // 3. Call backend /api/ai
       const res = await fetch('/api/ai', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -80,7 +99,7 @@ export default function GeneratePage() {
       // Output from strictly-typed API
       const result = json // { title, tasks }
 
-      // 3. Insert workflow (user_id, tittle)
+      // 4. Insert workflow (user_id, tittle)
       const { data: newWf, error: wfError } = await supabase
         .from('workflows')
         .insert([{ user_id: user.id, tittle: result.title, category: 'AI Generated' }])
