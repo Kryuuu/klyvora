@@ -5,10 +5,8 @@
   --foreground: #fafafa;
   --card-bg: rgba(22, 22, 33, 0.4);
   --card-border: rgba(39, 39, 58, 0.5);
-  --purple-start: #7c3aed;
-  --purple-mid: #a855f7;
-  --purple-end: #7c3aed;
-  --accent-glow: rgba(124, 58, 237, 0.1);
+  --purple-accent: #7c3aed;
+  --purple-hover: #6d28d9;
   --text-muted: #888899;
   
   --success: #10b981;
@@ -21,10 +19,8 @@
   --color-foreground: var(--foreground);
   --color-card-bg: var(--card-bg);
   --color-card-border: var(--card-border);
-  --color-purple-start: var(--purple-start);
-  --color-purple-mid: var(--purple-mid);
-  --color-purple-end: var(--purple-end);
-  --color-accent-glow: var(--accent-glow);
+  --color-purple-accent: var(--purple-accent);
+  --color-purple-hover: var(--purple-hover);
   --color-text-muted: var(--text-muted);
   --color-success: var(--success);
   --color-warning: var(--warning);
@@ -40,7 +36,7 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-inter), system-ui, sans-serif;
-  letter-spacing: -0.0125em;
+  letter-spacing: -0.015em;
 }
 
 /* Minimalist SaaS Utilities */
@@ -52,24 +48,8 @@ body {
   border: 1px solid var(--card-border);
 }
 
-.text-gradient {
-  background: linear-gradient(135deg, #fff, #a855f7);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.btn-premium {
-  background: linear-gradient(135deg, var(--purple-start), var(--purple-mid));
+.transition-smooth {
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.btn-premium:hover {
-  filter: brightness(1.1);
-  transform: translateY(-1px);
-}
-
-.btn-premium:active {
-  transform: translateY(0);
 }
 
 /* Base Transition */
@@ -79,7 +59,7 @@ body {
 
 /* Animations (Minimalist) */
 @keyframes slideUpFade {
-  from { opacity: 0; transform: translateY(10px); }
+  from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: translateY(0); }
 }
 

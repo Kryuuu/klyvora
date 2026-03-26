@@ -19,7 +19,7 @@ export function Navbar({ userEmail }) {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-white/5 bg-[#0f0f14]/80 backdrop-blur-xl px-6 h-16 flex items-center justify-between">
       <div className="flex items-center space-x-4">
-         <span className="text-[11px] font-bold text-zinc-500 uppercase tracking-[0.2em] animate-pulse">Neural Link Active</span>
+         <span className="text-[11px] font-bold text-zinc-600 uppercase tracking-[0.2em]">Telemetry Active</span>
       </div>
 
       <div className="flex items-center space-x-6">
@@ -31,7 +31,7 @@ export function Navbar({ userEmail }) {
         )}
         
         <div className="flex items-center space-x-3 pl-6 border-l border-white/5 h-8">
-           <div className="h-8 w-8 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center text-[11px] font-bold text-purple-400 group cursor-pointer hover:border-purple-500/50 transition-all active:scale-90">
+           <div className="h-8 w-8 rounded-full bg-zinc-900 border border-white/10 flex items-center justify-center text-[11px] font-bold text-purple-400">
              {userEmail ? userEmail[0].toUpperCase() : 'U'}
            </div>
            
