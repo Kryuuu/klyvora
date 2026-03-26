@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Sidebar } from './Sidebar'
 import { Navbar } from './Navbar'
 
-export function AppShell({ children, userEmail }) {
+export function AppShell({ children, userEmail, plan }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
 
   const toggleMobileMenu = () => setIsMobileMenuOpen(!isMobileMenuOpen)
@@ -31,7 +31,7 @@ export function AppShell({ children, userEmail }) {
       
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col md:pl-64 min-w-0">
-        <Navbar userEmail={userEmail} onMenuToggle={toggleMobileMenu} />
+        <Navbar userEmail={userEmail} plan={plan} onMenuToggle={toggleMobileMenu} />
         
         <main className="flex-1 p-6 md:p-12 w-full max-w-6xl mx-auto lg:mt-8 animate-fade-in">
            {children}

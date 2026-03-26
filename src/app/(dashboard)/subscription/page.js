@@ -5,12 +5,14 @@ import { createClient } from '@/lib/supabaseClient'
 import { Card } from "@/components/ui/Card"
 import { Button } from "@/components/ui/Button"
 import { Badge } from "@/components/ui/Badge"
+import { Modal } from "@/components/ui/Modal"
 
 export default function SubscriptionPage() {
   const [loading, setLoading] = useState(false)
   const [user, setUser] = useState(null)
   const [subscription, setSubscription] = useState(null)
   const [checking, setChecking] = useState(true)
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '', variant: 'primary' })
   const supabase = createClient()
 
   useEffect(() => {
@@ -35,16 +37,23 @@ export default function SubscriptionPage() {
       if (data.token) {
         // @ts-ignore
         window.snap.pay(data.token, {
-          onSuccess: (result) => { alert('Payment successful!'); window.location.reload() },
-          onPending: (result) => { alert('Payment pending.') },
-          onError: (result) => { alert('Payment failed.') },
+          onSuccess: (result) => { 
+            setModal({ isOpen: true, title: 'Payment Success', message: 'Mission accomplished. Your neural tiers have been expanded.', variant: 'primary' });
+            setTimeout(() => window.location.reload(), 2000);
+          },
+          onPending: (result) => { 
+            setModal({ isOpen: true, title: 'Payment Pending', message: 'Expansion signal is being processed. Please wait.', variant: 'primary' });
+          },
+          onError: (result) => { 
+            setModal({ isOpen: true, title: 'Expansion Failed', message: 'Mission failed. Could not verify expansion signal.', variant: 'danger' });
+          },
           onClose: () => { console.log('Snap Closed') }
         })
       } else {
         throw new Error(data.error || 'Failed to initialize payment')
       }
     } catch (err) {
-      alert(err.message)
+      setModal({ isOpen: true, title: 'System Error', message: err.message, variant: 'danger' });
     } finally {
       setLoading(false)
     }
@@ -56,6 +65,15 @@ export default function SubscriptionPage() {
 
   return (
     <div className="max-w-5xl mx-auto space-y-16 animate-slide-up pb-24">
+      <Modal 
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        onConfirm={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        variant={modal.variant}
+        confirmText="Acknowledge"
+      />
       <div className="text-center space-y-4">
         <Badge className="bg-purple-500/10 text-purple-400 border-none px-6 py-2 font-black italic tracking-[0.2em] text-[10px]">Neural Tier Selection</Badge>
         <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase underline decoration-purple-500/20 underline-offset-[12px]">Pro Access Engine</h1>

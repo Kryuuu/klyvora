@@ -7,12 +7,13 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '', variant: 'primary' })
   
   const router = useRouter()
   const supabase = createClient()
@@ -29,7 +30,7 @@ export default function LoginPage() {
       })
 
       if (authError) {
-        setError(authError.message)
+        setModal({ isOpen: true, title: 'Auth Error', message: authError.message, variant: 'danger' })
         setLoading(false)
         return
       }
@@ -40,7 +41,7 @@ export default function LoginPage() {
         router.push('/dashboard')
       }
     } catch (err) {
-      setError('Neural link synchronization failed.')
+      setModal({ isOpen: true, title: 'Sync Failure', message: 'Neural link synchronization failed.', variant: 'danger' })
     } finally {
       setLoading(false)
     }
@@ -48,17 +49,25 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#0f0f14] flex items-center justify-center p-6 font-sans relative overflow-hidden isolate">
-      {/* 🌌 Atmospheric Backdrop */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-[#7c3aed]/10 blur-[120px] rounded-full -z-10 animate-glow-flow" />
+
+      <Modal 
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        onConfirm={() => setModal({ ...modal, isOpen: false })}
+        title={modal.title}
+        message={modal.message}
+        variant={modal.variant}
+        confirmText="Acknowledge Protocol"
+      />
 
       <div className="w-full max-w-md space-y-8 animate-slide-up relative z-10">
         
         {/* Header: Immersive Branding */}
         <div className="text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-[28px] bg-gradient-to-br from-[#7c3aed] to-[#a855f7] mb-4 shadow-2xl shadow-purple-500/20 group hover:rotate-6 transition-transform">
-             <svg className="w-10 h-10 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-             </svg>
+          <div className="inline-flex items-center justify-center w-28 h-28 mb-4 group hover:rotate-6 transition-transform relative p-4">
+             <div className="absolute inset-0 bg-[#7c3aed]/5 blur-3xl rounded-full scale-0 group-hover:scale-110 transition-transform duration-1000" />
+             <img src="/logo-klyvora.png" alt="KlyVora Logo" className="w-full h-full object-contain relative z-10" />
           </div>
           <div className="space-y-2">
              <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Access Cluster</h1>
@@ -72,17 +81,17 @@ export default function LoginPage() {
            <div className="absolute inset-0 bg-dotted-grid opacity-5 pointer-events-none" />
            
            <form onSubmit={handleLogin} className="space-y-6 relative z-10">
-            {error && (
+            {modal.isOpen && modal.variant === 'danger' && (
               <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold uppercase tracking-widest text-center animate-shake">
-                {error}
+                {modal.message}
               </div>
             )}
             
             <div className="space-y-2">
-               <label className="text-[10px] font-black text-[#a1a1aa] uppercase tracking-[0.2em] ml-1">Interface ID</label>
+               <label className="text-[10px] font-black text-[#a1a1aa] uppercase tracking-[0.2em] ml-1">Email</label>
                <Input 
                  type="email" 
-                 placeholder="name@neural.link"
+                 placeholder="Klyvora@gmail.com"
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
                  className="h-14 bg-[#0f0f14]/50 border-[#3f3f46] rounded-2xl focus:scale-[1.01] transition-transform placeholder:text-zinc-700"
@@ -104,7 +113,7 @@ export default function LoginPage() {
             
             <Button 
                type="submit" 
-               className="w-full h-14 font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-purple-500/20 mt-4 active:scale-95 transition-all" 
+               className="w-full h-14 font-black uppercase tracking-[0.2em] text-xs rounded-2xl shadow-xl shadow-purple-500/10 mt-4 active:scale-95 transition-all bg-[#7c3aed] hover:bg-[#8b5cf6]" 
                isLoading={loading}
             >
                Initialize Link

@@ -1,14 +1,15 @@
 @import "tailwindcss";
 
 :root {
-  --background: #0f0f14;
-  --foreground: #fafafa;
-  --surface: #18181b;
-  --surface-hover: #27272a;
-  --border: #3f3f46;
+  --background: #09090b;
+  --foreground: #ffffff;
+  --surface: #121217;
+  --surface-hover: #1c1c24;
+  --border: rgba(255, 255, 255, 0.08);
   --primary: #7c3aed;
-  --primary-hover: #6d28d9;
-  --text-muted: #a1a1aa;
+  --primary-hover: #8b5cf6;
+  --text-muted: #71717a;
+  --surface-shadow: 0 20px 40px -15px rgba(0, 0, 0, 0.5);
 }
 
 @theme inline {
@@ -103,11 +104,41 @@ body {
 
 /* AI Atmospheric Effects */
 @keyframes flowGradient {
-  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
-  50% { transform: translate(-30%, -40%) scale(1.2); opacity: 0.5; }
-  100% { transform: translate(-50%, -50%) scale(1); opacity: 0.3; }
+  0% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; }
+  50% { transform: translate(-45%, -48%) scale(1.1); opacity: 0.25; }
+  100% { transform: translate(-50%, -50%) scale(1); opacity: 0.15; }
 }
 
 .animate-glow-flow {
-  animation: flowGradient 15s ease-in-out infinite;
+  animation: flowGradient 20s ease-in-out infinite;
+}
+
+@keyframes spin-slow {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.animate-spin-slow {
+  animation: spin-slow 8s linear infinite;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-4px); }
+  75% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: shake 0.2s ease-in-out 0s 2;
+}
+
+.bg-glass {
+  background: rgba(18, 18, 23, 0.7);
+  backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.gradient-text {
+  background: linear-gradient(135deg, #ffffff 0%, #a1a1aa 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }

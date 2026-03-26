@@ -7,13 +7,14 @@ import Link from 'next/link'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Input } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
 
 export default function RegisterPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState(null)
+  const [modal, setModal] = useState({ isOpen: false, title: '', message: '', variant: 'primary', onConfirm: () => {} })
   
   const router = useRouter()
   const supabase = createClient()
@@ -41,11 +42,16 @@ export default function RegisterPage() {
       const { user } = authData
       if (user) {
         await supabase.from('profiles').upsert({ id: user.id, name: fullName || email.split('@')[0] }, { onConflict: 'id' })
-        alert('Registration successful! Please check your email for confirmation.')
-        router.push('/login')
+        setModal({
+           isOpen: true,
+           title: 'Node Registered',
+           message: 'Registration successful! Node identity has been synchronized. Authorization required.',
+           variant: 'success',
+           onConfirm: () => router.push('/login')
+        })
       }
     } catch (err) {
-      setError('Registration initialization failed.')
+      setModal({ isOpen: true, title: 'Sync Error', message: 'Registration initialization failed.', variant: 'danger', onConfirm: () => {} })
     } finally {
       setLoading(false)
     }
@@ -53,17 +59,25 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#0f0f14] flex items-center justify-center p-6 font-sans relative overflow-hidden isolate">
-      {/* 🌌 Atmospheric Backdrop */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-indigo-600/10 blur-[120px] rounded-full -z-10 animate-glow-flow" style={{ animationDelay: '-5s' }} />
+
+      <Modal 
+        isOpen={modal.isOpen}
+        onClose={() => setModal({ ...modal, isOpen: false })}
+        onConfirm={() => { modal.onConfirm(); setModal({ ...modal, isOpen: false }); }}
+        title={modal.title}
+        message={modal.message}
+        variant={modal.variant}
+        confirmText="Acknowledge Protocol"
+      />
 
       <div className="w-full max-w-md space-y-8 animate-slide-up relative z-10">
         
         {/* Header Section */}
         <div className="text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-20 h-20 rounded-[28px] bg-gradient-to-br from-indigo-500 to-[#7c3aed] mb-4 shadow-2xl shadow-indigo-500/20 group hover:rotate-6 transition-transform">
-             <svg className="w-10 h-10 text-white drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
-             </svg>
+          <div className="inline-flex items-center justify-center w-28 h-28 mb-4 group hover:rotate-6 transition-transform relative p-4">
+             <div className="absolute inset-0 bg-[#7c3aed]/5 blur-3xl rounded-full scale-0 group-hover:scale-110 transition-transform duration-1000" />
+             <img src="/logo-klyvora.png" alt="KlyVora Logo" className="w-full h-full object-contain relative z-10" />
           </div>
           <div className="space-y-2">
              <h1 className="text-4xl font-black text-white tracking-tighter uppercase italic">Register Node</h1>
@@ -77,9 +91,9 @@ export default function RegisterPage() {
            <div className="absolute inset-0 bg-dotted-grid opacity-5 pointer-events-none" />
            
            <form onSubmit={handleRegister} className="space-y-6 relative z-10">
-            {error && (
+            {modal.variant === 'danger' && modal.isOpen && (
               <div className="p-4 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold uppercase tracking-widest text-center animate-shake">
-                {error}
+                {modal.message}
               </div>
             )}
             
@@ -87,7 +101,7 @@ export default function RegisterPage() {
                <label className="text-[10px] font-black text-[#a1a1aa] uppercase tracking-[0.2em] ml-1">Identity Label</label>
                <Input 
                  type="text" 
-                 placeholder="Elon Musk"
+                 placeholder="KlyVora"
                  value={fullName}
                  onChange={(e) => setFullName(e.target.value)}
                  className="h-14 bg-[#0f0f14]/50 border-[#3f3f46] rounded-2xl focus:scale-[1.01] transition-transform placeholder:text-zinc-700"
@@ -99,7 +113,7 @@ export default function RegisterPage() {
                <label className="text-[10px] font-black text-[#a1a1aa] uppercase tracking-[0.2em] ml-1">Interface ID (Email)</label>
                <Input 
                  type="email" 
-                 placeholder="name@neural.link"
+                 placeholder="Klyvora@gmail.com"
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
                  className="h-14 bg-[#0f0f14]/50 border-[#3f3f46] rounded-2xl focus:scale-[1.01] transition-transform placeholder:text-zinc-700"

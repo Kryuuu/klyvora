@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import { Badge } from '@/components/ui/Badge'
 import { Input } from '@/components/ui/Input'
+import { Modal } from '@/components/ui/Modal'
 
 export default function WorkflowsPage() {
   const [workflows, setWorkflows] = useState([])
@@ -15,6 +16,10 @@ export default function WorkflowsPage() {
   const [newTitle, setNewTitle] = useState('')
   const [creating, setCreating] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
+  const [initMode, setInitMode] = useState(null) // null, 'manual', 'ai'
+  
+  const [deleteId, setDeleteId] = useState(null)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
   
   const router = useRouter()
   const supabase = createClient()
@@ -47,15 +52,22 @@ export default function WorkflowsPage() {
       setWorkflows([data, ...workflows])
       setNewTitle('')
       setShowCreateModal(false)
+      setInitMode(null)
     }
     setCreating(false)
   }
 
   async function handleDeleteWorkflow(id) {
-    if (!confirm('Are you certain you want to decommission this sequence?')) return
+    if (id) {
+       setDeleteId(id)
+       setShowDeleteModal(true)
+       return
+    }
     
+    if (!deleteId) return
+
     try {
-      const { error } = await supabase.from('workflows').delete().eq('id', id)
+      const { error } = await supabase.from('workflows').delete().eq('id', deleteId)
       
       if (error) {
         console.error('Delete error:', error)
@@ -63,15 +75,34 @@ export default function WorkflowsPage() {
         return
       }
       
-      setWorkflows(workflows.filter(w => w.id !== id))
+      setWorkflows(workflows.filter(w => w.id !== deleteId))
+      setShowDeleteModal(false)
+      setDeleteId(null)
     } catch (err) {
       console.error('Unexpected error:', err)
       alert('An unexpected error occurred while deleting.')
     }
   }
 
+  const resetInit = () => {
+    setShowCreateModal(false)
+    setInitMode(null)
+    setNewTitle('')
+  }
+
   return (
     <div className="space-y-12 animate-fade-in relative">
+      <Modal 
+        isOpen={showDeleteModal}
+        onClose={() => { setShowDeleteModal(false); setDeleteId(null); }}
+        onConfirm={handleDeleteWorkflow}
+        title="Decommission Cluster"
+        message="Are you certain you want to decommission this sequence? This operation cannot be reversed."
+        confirmText="Confirm Deletion"
+        cancelText="Abort"
+        variant="danger"
+      />
+      
       <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#7c3aed]/5 blur-[120px] rounded-full -z-10 pointer-events-none" />
 
       {/* Header: Technical & Bold */}
@@ -81,41 +112,81 @@ export default function WorkflowsPage() {
           <p className="text-[#a1a1aa] text-sm font-medium italic">High-level neural workflow management.</p>
         </div>
         <Button 
-          onClick={() => setShowCreateModal(!showCreateModal)}
+          onClick={showCreateModal ? resetInit : () => setShowCreateModal(true)}
           className={`h-12 px-8 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-lg transition-all ${showCreateModal ? 'bg-zinc-800 text-white' : 'bg-[#7c3aed] text-white shadow-purple-500/20'}`}
         >
           {showCreateModal ? 'Deactivate init' : 'Initialize +'}
         </Button>
       </div>
 
-      {/* Hero-style Inline Creation */}
+      {/* Hero-style Inline Creation Choice */}
       {showCreateModal && (
         <Card className="p-8 bg-[#18181b]/60 border-[#7c3aed]/40 backdrop-blur-xl rounded-[32px] animate-slide-up shadow-2xl relative overflow-hidden group">
-           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-              <svg className="w-24 h-24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M12 4v16m8-8H4" /></svg>
-           </div>
-           <div className="relative z-10 max-w-md">
-              <h3 className="text-lg font-black text-white uppercase mb-6 italic tracking-tight underline decoration-[#7c3aed] decoration-4 underline-offset-8">New Neural Cluster</h3>
-              <form onSubmit={handleCreateWorkflow} className="flex flex-col sm:flex-row gap-4 items-end">
-                 <div className="flex-1 w-full">
-                    <Input 
-                      label="Cluster Label" 
-                      placeholder="e.g. Data Synthesis Alpha" 
-                      value={newTitle} 
-                      onChange={(e) => setNewTitle(e.target.value)} 
-                      className="h-12 bg-[#0f0f14] border-[#3f3f46] rounded-2xl"
-                      required 
-                    />
-                 </div>
-                 <Button type="submit" isLoading={creating} className="h-12 px-8 rounded-2xl font-bold uppercase tracking-widest text-[10px]">
-                    Register
-                 </Button>
-              </form>
-           </div>
+           <div className="absolute inset-0 bg-dotted-grid opacity-5 pointer-events-none" />
+           
+           {!initMode ? (
+             <div className="relative z-10 space-y-8">
+                <div className="space-y-2">
+                   <h3 className="text-xl font-black text-white uppercase italic tracking-tight">Select Initialization Mode</h3>
+                   <p className="text-xs text-[#a1a1aa] font-bold uppercase tracking-widest">Choose how you want to build your neural cluster</p>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                   <button 
+                     onClick={() => setInitMode('manual')}
+                     className="p-8 rounded-[24px] bg-[#0f0f14] border border-[#3f3f46] hover:border-white transition-all text-left flex flex-col gap-4 group/mode"
+                   >
+                      <div className="w-12 h-12 rounded-xl bg-white/5 flex items-center justify-center text-white group-hover/mode:bg-white group-hover/mode:text-black transition-colors">
+                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                      </div>
+                      <div>
+                         <h4 className="font-black text-white uppercase italic tracking-tighter">Custom Cluster</h4>
+                         <p className="text-[10px] text-[#a1a1aa] font-bold uppercase tracking-widest mt-1">Build your own neural sequence</p>
+                      </div>
+                   </button>
+
+                   <Link 
+                     href="/generate"
+                     className="p-8 rounded-[24px] bg-gradient-to-br from-[#7c3aed]/20 to-indigo-600/20 border border-[#7c3aed]/50 hover:border-[#7c3aed] transition-all text-left flex flex-col gap-4 group/ai"
+                   >
+                      <div className="w-12 h-12 rounded-xl bg-[#7c3aed] flex items-center justify-center text-white shadow-lg shadow-purple-500/20 group-hover/ai:scale-110 transition-transform">
+                         <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                      </div>
+                      <div>
+                         <h4 className="font-black text-white uppercase italic tracking-tighter">AI Generator</h4>
+                         <p className="text-[10px] text-purple-300 font-bold uppercase tracking-widest mt-1">Autonomous cluster synthesis</p>
+                      </div>
+                   </Link>
+                </div>
+             </div>
+           ) : initMode === 'manual' ? (
+             <div className="relative z-10 max-w-md animate-fade-in">
+                <button onClick={() => setInitMode(null)} className="text-[10px] font-black text-[#a1a1aa] uppercase tracking-[0.2em] mb-6 hover:text-white flex items-center gap-2">
+                   <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M15 19l-7-7 7-7" /></svg>
+                   Back to mode
+                </button>
+                <h3 className="text-lg font-black text-white uppercase mb-6 italic tracking-tight underline decoration-[#7c3aed] decoration-4 underline-offset-8">Manual Registration</h3>
+                <form onSubmit={handleCreateWorkflow} className="flex flex-col sm:flex-row gap-4 items-end">
+                   <div className="flex-1 w-full">
+                      <Input 
+                        label="Cluster Label" 
+                        placeholder="e.g. Data Synthesis Alpha" 
+                        value={newTitle} 
+                        onChange={(e) => setNewTitle(e.target.value)} 
+                        className="h-12 bg-[#0f0f14] border-[#3f3f46] rounded-2xl"
+                        required 
+                      />
+                   </div>
+                   <Button type="submit" isLoading={creating} className="h-12 px-8 rounded-2xl font-bold uppercase tracking-widest text-[10px]">
+                      Register
+                   </Button>
+                </form>
+             </div>
+           ) : null}
         </Card>
       )}
 
-      {/* Workflows Grid: Premium & Minimal */}
+      {/* Workflows Grid Collection */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
          {loading ? (
            <div className="col-span-full py-20 text-center text-[#a1a1aa] text-sm font-black uppercase tracking-[0.6em] animate-pulse">Syncing Telemetry...</div>
@@ -134,8 +205,8 @@ export default function WorkflowsPage() {
                 <div className="p-8 flex flex-col h-full justify-between">
                    <div className="space-y-6">
                       <div className="flex justify-between items-start">
-                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center text-white shadow-xl shadow-purple-500/20 group-hover:rotate-12 transition-transform">
-                            <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                         <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#7c3aed] to-[#a855f7] flex items-center justify-center text-white shadow-xl shadow-purple-500/20 group-hover:rotate-12 transition-transform overflow-hidden p-3 transition-all">
+                            <img src="/logo-klyvora.png" alt="Logo" className="w-full h-full object-cover" />
                          </div>
                          <Badge status="done" className="bg-[#7c3aed]/10 text-[#7c3aed] italic font-black uppercase text-[9px] px-4 py-1 rounded-lg">Operational</Badge>
                       </div>
