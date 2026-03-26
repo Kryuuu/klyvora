@@ -22,7 +22,6 @@ export default function RegisterPage() {
   const handleRegister = async (e) => {
     e.preventDefault()
     setLoading(true)
-    setError(null)
     
     try {
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -34,7 +33,7 @@ export default function RegisterPage() {
       })
 
       if (authError) {
-        setError(authError.message)
+        setModal({ isOpen: true, title: 'Auth Error', message: authError.message, variant: 'danger', onConfirm: () => {} })
         setLoading(false)
         return
       }
