@@ -30,7 +30,7 @@ export default function DashboardPage() {
       setRecentWorkflows(workflows?.slice(0, 3) || [])
       setStats({
         workflows: workflows?.length || 0,
-        tasks: 0 // Placeholder
+        tasks: 0 // Simplification as requested
       })
       setLoading(false)
     }
@@ -39,94 +39,78 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-100px)] items-center justify-center text-zinc-500 font-black uppercase tracking-[0.4em] text-xs">
-        <span className="animate-pulse">Accessing Neural Cache...</span>
+      <div className="flex h-screen items-center justify-center text-zinc-500 font-bold uppercase tracking-[0.4em] text-xs">
+        <span className="animate-pulse">Loading Matrix...</span>
       </div>
     )
   }
 
   return (
-    <div className="space-y-12 animate-slide-up pb-20">
-      {/* Welcome Banner */}
-      <section className="relative p-10 rounded-[32px] overflow-hidden border border-white/5 bg-[#0a0a0f] shadow-2xl">
+    <div className="space-y-12 animate-page pb-20">
+      {/* Welcome Section */}
+      <section className="relative p-12 rounded-[32px] overflow-hidden border border-white/5 bg-[#12121a] shadow-inner">
          <div className="absolute top-0 right-0 w-[400px] h-full bg-gradient-to-l from-purple-600/10 to-transparent" />
-         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-10">
             <div className="space-y-3">
-               <Badge className="bg-purple-500/10 text-purple-400 border-none px-4 py-1.5 rounded-xl italic">Operator Online</Badge>
-               <h1 className="text-4xl md:text-5xl font-black text-white italic tracking-tighter">
-                  Welcome back, <span className="text-purple-500">{profile?.name || 'User'}</span>
+               <Badge className="bg-purple-500/10 text-purple-400 border-none px-4 py-1.5 font-bold text-[10px] items-center mb-6">User Profile Authenticated</Badge>
+               <h1 className="text-4xl md:text-5xl font-bold text-white tracking-tight">
+                  Welcome back, <span className="text-purple-500">{profile?.name || user?.email?.split('@')[0]}</span>
                </h1>
-               <p className="text-zinc-500 font-medium max-w-sm leading-relaxed">System status: All clusters operational. Ready for neural synthesis.</p>
+               <p className="text-zinc-500 font-medium max-w-sm leading-relaxed">Cluster is active. Ready to synthesize neural operational sequences.</p>
             </div>
             <Link href="/generate">
-               <Button className="h-16 px-10 shadow-purple-600/30 font-black italic uppercase tracking-widest text-xs">
-                  Begin Synthesis +
+               <Button className="h-16 px-10 shadow-lg shadow-purple-600/20 font-bold uppercase tracking-widest text-xs btn-premium">
+                  Create Workflow +
                </Button>
             </Link>
          </div>
       </section>
 
-      {/* Stats Grid */}
+      {/* Stats Cards Grid (rounded-2xl) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {[
-            { label: 'Active Clusters', value: stats.workflows, icon: 'M13 10V3L4 14h7v7l9-11h-7z', color: 'text-purple-500' },
-            { label: 'Neural Protocols', value: 'v2.4 stable', icon: 'M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z', color: 'text-zinc-500' },
-            { label: 'Matrix Node ID', value: profile?.id?.slice(0, 8), icon: 'M12 11c0 3.517-1.009 6.799-2.753 9.571m-2.105-3.14c-1.121-1.121-1.815-2.668-1.815-4.379c0-3.517 1.009-6.799 2.753-9.571m11.137 15.903l-3.325-3.325c-.201-.201-.325-.478-.325-.783V11a2 2 0 114 0v3.4c0 .305-.124.582-.325.783L18.137 18.529', color: 'text-emerald-500' }
+            { label: 'Total Workflows', value: stats.workflows, icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
+            { label: 'Total Tasks', value: stats.tasks, icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+            { label: 'Active Clusters', value: stats.workflows, icon: 'M13 10V3L4 14h7v7l9-11h-7z' }
           ].map((stat, i) => (
-            <Card key={i} className="group relative overflow-hidden bg-zinc-900/30 border border-white/5 hover:border-white/10 p-8">
-               <div className="absolute top-0 right-0 p-4 opacity-5 translate-x-4 translate-y-[-4px] group-hover:translate-x-0 group-hover:translate-y-0 transition-transform duration-500">
-                  <svg className="w-24 h-24 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d={stat.icon} /></svg>
-               </div>
+            <Card key={i} className="group relative overflow-hidden bg-zinc-900/30 border border-white/5 hover:border-purple-500/20 rounded-2xl p-8 transition-base">
                <div className="flex items-center space-x-4 mb-6">
-                  <div className={`p-3 rounded-2xl bg-white/5 border border-white/5 ${stat.color}`}>
+                  <div className="p-3 rounded-2xl bg-white/5 border border-white/5 text-purple-500 transition-base group-hover:scale-110">
                      <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} /></svg>
                   </div>
-                  <h3 className="text-[10px] font-black text-zinc-600 uppercase tracking-[0.2em]">{stat.label}</h3>
+                  <h3 className="text-xs font-bold text-zinc-600 uppercase tracking-widest leading-none">{stat.label}</h3>
                </div>
-               <p className="text-3xl font-black text-white tracking-tighter italic">{stat.value}</p>
+               <p className="text-4xl font-bold text-white tracking-tighter">{stat.value}</p>
             </Card>
           ))}
       </div>
 
-      {/* List Section */}
-      <div className="space-y-6">
+      {/* Recent Workflows */}
+      <div className="space-y-6 pt-6">
           <div className="flex justify-between items-center border-b border-white/5 pb-6">
-             <div className="flex items-center space-x-3">
-                <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,1)]" />
-                <h3 className="text-lg font-black text-white italic tracking-tight uppercase">Recent Telemetry</h3>
-             </div>
-             <Link href="/workflows">
-                <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest text-zinc-500 hover:text-purple-400">View Global Access &rarr;</Button>
-             </Link>
+             <h3 className="text-lg font-bold text-white tracking-tight">Recent Workflows</h3>
+             <Link href="/workflows" className="text-xs text-purple-400 hover:text-purple-300 font-bold transition-colors">See All &rarr;</Link>
           </div>
           
           <div className="grid grid-cols-1 gap-6">
              {recentWorkflows.length === 0 ? (
-                <div className="p-20 text-center rounded-[32px] border border-dashed border-white/10 bg-white/2 opacity-30">
-                   <p className="text-zinc-500 font-black uppercase tracking-[0.3em] text-xs">No Matrix Clusters Logged</p>
+                <div className="p-20 text-center rounded-[32px] border-2 border-dashed border-white/10 bg-white/2 opacity-30">
+                   <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs tracking-[0.3em]">No Active Telemetry</p>
                 </div>
              ) : (
                 recentWorkflows.map(wf => (
-                   <Card key={wf.id} className="p-0 border-white/5 bg-zinc-900/20 hover:bg-zinc-900/40 relative group overflow-hidden">
-                      <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 opacity-0 group-hover:opacity-100 transition-opacity" />
-                      <div className="p-6 flex justify-between items-center">
+                   <Card key={wf.id} className="p-0 border-white/5 bg-zinc-900/20 hover:bg-zinc-900/40 relative group overflow-hidden rounded-2xl transition-base">
+                      <div className="p-8 flex justify-between items-center">
                          <div className="flex items-center gap-6">
-                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-purple-500 border border-white/5">
-                               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                            <div className="w-12 h-12 rounded-2xl bg-white/5 flex items-center justify-center text-purple-400 border border-white/5 transition-base group-hover:rotate-6">
+                               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
                             </div>
                             <div>
-                               <h4 className="font-black text-white italic tracking-tight uppercase text-lg group-hover:text-purple-400 transition-colors">{wf.title}</h4>
-                               <p className="text-[10px] font-black text-zinc-600 uppercase tracking-widest mt-1">Classification: {wf.category || 'Pulse Cluster'}</p>
+                               <h4 className="font-bold text-lg text-white group-hover:text-purple-400 tracking-tight transition-colors">{wf.title}</h4>
+                               <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mt-1">{wf.category || 'Cluster Mainframe'}</p>
                             </div>
                          </div>
-                         <div className="flex items-center gap-6">
-                            <Badge status="done" className="bg-emerald-500/10 text-emerald-400 border-none px-3 font-black text-[9px] h-6 flex items-center">Linked</Badge>
-                            <Link href="/tasks">
-                               <Button variant="ghost" className="w-10 h-10 p-0 rounded-xl hover:bg-white/10">
-                                  <svg className="w-5 h-5 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-                               </Button>
-                            </Link>
-                         </div>
+                         <Badge status="done" className="bg-emerald-500/10 text-emerald-400 border-none px-4 py-1.5 font-bold text-[9px] h-6 flex items-center">Linked</Badge>
                       </div>
                    </Card>
                 ))

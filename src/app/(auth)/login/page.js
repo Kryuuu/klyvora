@@ -40,80 +40,74 @@ export default function LoginPage() {
         router.push('/dashboard')
       }
     } catch (err) {
-      setError('An unexpected error occurred during neural authorization.')
+      setError('An unexpected error occurred.')
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#09090b] flex items-center justify-center p-6 selection:bg-purple-500/30">
+    <div className="min-h-screen w-full bg-[#0f0f14] flex items-center justify-center p-6 selection:bg-purple-500/30">
       
-      <div className="w-full max-w-md animate-fade-in divide-y divide-white/5">
+      <div className="w-full max-w-sm animate-page space-y-8">
         
-        {/* Header Section */}
-        <div className="text-center pb-8 space-y-4">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-gradient-to-tr from-purple-600 to-purple-400 shadow-xl shadow-purple-500/20 mb-2">
+        {/* Logo/Header */}
+        <div className="text-center space-y-2">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-purple-400 shadow-xl shadow-purple-500/10 mb-6">
              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
-          <h1 className="text-3xl font-black text-white italic tracking-tighter uppercase">Login</h1>
-          <p className="text-sm text-zinc-500 font-medium italic">Login to your KlyVora account</p>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Welcome back</h1>
+          <p className="text-sm text-zinc-500 font-medium">Log in to your KlyVora account</p>
         </div>
 
-        {/* Card Form */}
-        <div className="pt-8 px-2">
+        {/* Card Form (Glass Effect) */}
+        <Card className="p-8 border-white/5 bg-zinc-900/30 backdrop-blur-2xl rounded-2xl shadow-2xl">
           <form onSubmit={handleLogin} className="space-y-6">
             {error && (
-              <div className="p-4 rounded-xl bg-danger/10 border border-danger/20 text-danger text-[10px] uppercase font-black tracking-widest text-center animate-fade-in">
+              <div className="p-4 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs font-semibold text-center animate-fade">
                 {error}
               </div>
             )}
             
-            <div className="space-y-5">
+            <div className="space-y-4">
                <Input 
-                 label="Neural Identifier" 
+                 label="Email Address" 
                  type="email" 
                  placeholder="name@cluster.ai"
                  value={email}
                  onChange={(e) => setEmail(e.target.value)}
-                 className="bg-black/40 border-white/5 h-12 rounded-xl focus:border-purple-500/50"
+                 className="bg-black/20 border-white/5 h-12 rounded-xl focus:border-purple-500/50"
                  required
                />
                
                <Input 
-                 label="Secure Protocol Key" 
+                 label="Protocol Key" 
                  type="password" 
                  placeholder="••••••••"
                  value={password}
                  onChange={(e) => setPassword(e.target.value)}
-                 className="bg-black/40 border-white/5 h-12 rounded-xl focus:border-purple-500/50"
+                 className="bg-black/20 border-white/5 h-12 rounded-xl focus:border-purple-500/50"
                  required
                />
             </div>
             
             <Button 
                type="submit" 
-               className="w-full h-14 font-black uppercase text-xs tracking-[0.2em] italic shadow-lg shadow-purple-600/20" 
+               className="w-full h-12 font-bold uppercase text-[11px] tracking-widest btn-premium shadow-lg shadow-purple-600/10" 
                isLoading={loading}
             >
-               Authorize Node
+               Sign In
             </Button>
             
-            <div className="relative py-4 flex items-center justify-center">
-               <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
-               <span className="relative bg-[#09090b] px-4 text-[10px] font-black text-zinc-600 uppercase tracking-widest leading-none">External Link</span>
-            </div>
-
-            <div className="text-center">
-              <Link href="/register">
-                 <Button variant="ghost" className="text-xs font-black text-zinc-500 hover:text-purple-400 italic tracking-tight transition-all">
-                    Don&apos;t have a neural node? <span className="underline decoration-purple-500/20 underline-offset-4 ml-1">Create Account Matrix</span>
-                 </Button>
+            <div className="pt-8 border-t border-white/5 mt-4 flex items-center justify-center">
+              <Link href="/register" className="text-xs font-bold text-zinc-500 hover:text-purple-400 transition-colors">
+                New to KlyVora? <span className="underline decoration-purple-500/20 underline-offset-4 ml-1">Create Account</span>
               </Link>
             </div>
           </form>
-        </div>
+        </Card>
         
+        <p className="text-center text-[10px] text-zinc-700 font-bold uppercase tracking-widest">Neural Operational Matrix v2.4</p>
       </div>
     </div>
   )
