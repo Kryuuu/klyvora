@@ -14,10 +14,22 @@ export default function Home() {
       <div className="pointer-events-none absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-indigo-600/10 blur-[120px] rounded-full" />
 
       <div className="max-w-4xl w-full text-center z-10 animate-slide-up">
-        {/* Logo Section */}
-        <div className="flex justify-center mb-12">
-           <div className="w-20 h-20 rounded-[28px] bg-gradient-to-tr from-purple-600 to-purple-400 shadow-2xl shadow-purple-500/30 flex items-center justify-center transform hover:rotate-12 transition-transform duration-500 cursor-pointer">
-              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+        {/* Logo Section with Neural Bloom */}
+        <div className="flex justify-center mb-16 relative group">
+           {/* Neural Pulse Backdrop */}
+           <div className="absolute inset-0 bg-purple-600/20 blur-[80px] rounded-full scale-150 animate-pulse-slow" />
+           <div className="absolute inset-0 bg-indigo-500/10 blur-[40px] rounded-full scale-110 animate-glow-flow" />
+           
+           <div className="relative z-10 w-32 h-32 flex items-center justify-center transform transition-all duration-1000 group-hover:scale-110 group-hover:rotate-[360deg]">
+              {/* Outer Ring Decoration */}
+              <div className="absolute inset-0 border border-purple-500/20 rounded-[40px] rotate-45 group-hover:border-purple-500/50 transition-colors duration-700" />
+              <div className="absolute inset-0 border border-indigo-500/10 rounded-[40px] -rotate-12 group-hover:border-indigo-500/30 transition-colors duration-700 delay-100" />
+              
+              <img 
+                src="/logo-klyvora.png" 
+                alt="KlyVora Collective" 
+                className="w-20 h-20 object-contain drop-shadow-[0_0_30px_rgba(124,58,237,0.4)]" 
+              />
            </div>
         </div>
 
@@ -28,16 +40,16 @@ export default function Home() {
            </Badge>
         </div>
 
-        {/* Title */}
-        <h1 className="text-5xl md:text-7xl font-black text-white italic tracking-tighter mb-8 leading-[0.95] md:leading-[0.9]">
-           UNLEASH THE POWER OF <br />
-           <span className="text-purple-500 underline decoration-purple-500/20 underline-offset-[12px]">KLYVORA AI</span>
+        {/* Title with Gradient Polish */}
+        <h1 className="text-6xl md:text-8xl font-black text-white italic tracking-tighter mb-8 leading-[0.95] md:leading-[0.85] uppercase">
+           Unleash the <br />
+           <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-white to-indigo-400 animate-gradient-x underline decoration-purple-500/20 underline-offset-[20px]">KLYVORA AI</span>
         </h1>
 
         {/* Subtitle */}
         <p className="text-zinc-500 text-lg md:text-xl font-medium max-w-2xl mx-auto mb-12 italic leading-relaxed">
            The next-generation neural matrix for automated AI workflows. 
-           Connect, synthesize, and scale your operational clusters with Gemini 2.0 pulse logic.
+           Connect, synthesize.
         </p>
 
         {/* CTA Buttons */}
