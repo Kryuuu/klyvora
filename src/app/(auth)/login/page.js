@@ -43,9 +43,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-6 bg-[#09090b] relative overflow-hidden">
-      {/* Background Glows */}
-      <div className="absolute top-[-20%] left-[-20%] w-[600px] h-[600px] bg-purple-600/10 blur-[150px] rounded-full" />
-      <div className="absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] bg-indigo-600/10 blur-[150px] rounded-full" />
+      {/* Background Glows (Pointer-events-none to prevent blocking clicks) */}
+      <div className="pointer-events-none absolute top-[-20%] left-[-20%] w-[600px] h-[600px] bg-purple-600/10 blur-[150px] rounded-full" />
+      <div className="pointer-events-none absolute bottom-[-20%] right-[-20%] w-[600px] h-[600px] bg-indigo-600/10 blur-[150px] rounded-full" />
 
       <div className="w-full max-w-md relative z-10 animate-slide-up">
         <div className="text-center mb-10">
