@@ -47,8 +47,7 @@ export default function LoginPage() {
         .from('profiles')
         .upsert({
            id: user.id, // Primary Key
-           name: user.email.split('@')[0],
-           created_at: new Date().toISOString()
+           name: user.email.split('@')[0]
         }, { onConflict: 'id' })
 
       if (profileError) {

@@ -49,8 +49,7 @@ export default function RegisterPage() {
         .from('profiles')
         .upsert({
           id: user.id, // Primary Key usually matches Auth UUID
-          name: fullName || email.split('@')[0],
-          created_at: new Date().toISOString()
+          name: fullName || email.split('@')[0]
         }, { onConflict: 'id' })
 
       if (profileError) {
@@ -90,7 +89,7 @@ export default function RegisterPage() {
               label="Full Name" 
               labelClassName="text-gray-400 font-bold uppercase text-[10px] tracking-widest"
               type="text" 
-              placeholder="Elon Musk"
+              placeholder="KlyVora"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
