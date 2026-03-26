@@ -4,8 +4,18 @@ import "./globals.css"
 const inter = Inter({ subsets: ["latin"], variable: '--font-inter' })
 
 export const metadata = {
-  title: "KlyVora",
-  description: "Modern SaaS web app for AI-powered workflow automation.",
+  title: "KlyVora | Neural Automation Workspace",
+  description: "The next-generation AI-powered automation workspace for seamless neural workflow orchestration.",
+  icons: {
+    icon: "/logo-klyvora.png",
+    shortcut: "/logo-klyvora.png",
+    apple: "/logo-klyvora.png",
+  },
+  openGraph: {
+    title: "KlyVora",
+    description: "Modern AI-powered workflow automation.",
+    images: [{ url: "/logo-klyvora.png" }],
+  }
 }
 
 export default function RootLayout({ children }) {
