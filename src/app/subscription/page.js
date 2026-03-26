@@ -112,7 +112,7 @@ export default function SubscriptionPage() {
 
         {/* Upgrade Card */}
         {!isPro && (
-          <Card glow className="p-8 border-purple-500/30 bg-purple-500/5 glow shadow-2xl flex flex-col justify-between relative overflow-hidden" glow>
+          <Card glow className="p-8 border-purple-500/30 bg-purple-500/5 shadow-2xl flex flex-col justify-between relative overflow-hidden">
             <div className="absolute -top-10 -right-10 w-40 h-40 bg-purple-600/10 rounded-full blur-3xl"></div>
             <div>
               <div className="flex justify-between items-start mb-6">
