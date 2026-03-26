@@ -1,14 +1,11 @@
-export function Input({ label, error, className = '', labelClassName = '', ...props }) {
+export function Input({ label, className = '', ...props }) {
   return (
-    <div className={`flex flex-col space-y-1.5 w-full ${className}`}>
-      {label && <label className={`text-sm font-semibold text-gray-400 ${labelClassName}`}>{label}</label>}
-      <input
-        className={`bg-[#0f0f14] border border-[#272737] rounded-xl px-4 h-12 text-white placeholder-gray-500 focus:outline-none focus:border-purple-500 transition-all duration-200 ${
-          error ? 'border-red-500 focus:border-red-500' : ''
-        }`}
+    <div className="space-y-1.5 w-full">
+      {label && <label className="block text-sm font-medium text-[#a1a1aa]">{label}</label>}
+      <input 
+        className={`w-full bg-[#0f0f14] border border-[#3f3f46] text-[#fafafa] rounded-xl px-4 py-3 outline-none focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] transition-colors ${className}`}
         {...props}
       />
-      {error && <p className="text-xs text-red-400 mt-1">{error}</p>}
     </div>
   )
 }

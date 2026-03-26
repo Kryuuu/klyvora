@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
 import Link from 'next/link'
-import { AnimatedHero } from '@/components/AnimatedHero'
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState(null)
@@ -39,40 +38,56 @@ export default function DashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center text-zinc-500 font-bold uppercase tracking-[0.4em] text-xs">
-        <span className="animate-pulse">Loading Hub...</span>
+      <div className="flex justify-center py-20 text-[#a1a1aa] text-sm animate-pulse">
+        Loading...
       </div>
     )
   }
 
   return (
-    <div className="space-y-16 animate-page pb-20">
-      {/* Welcome Section with Premium Animations */}
-      <AnimatedHero />
-
-      {/* Stats Cards Grid (Minimalism) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {[
-            { label: 'Total Workflows', value: stats.workflows, icon: 'M13 10V3L4 14h7v7l9-11h-7z' },
-            { label: 'Total Tasks', value: stats.tasks, icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' }
-          ].map((stat, i) => (
-            <Card key={i} className="bg-zinc-900/10 border border-white/5 p-10 transition-smooth group hover:bg-zinc-900/30 rounded-2xl">
-               <div className="flex items-center space-x-6">
-                  <div className="p-4 rounded-2xl bg-white/5 border border-white/5 text-purple-500 transition-smooth group-hover:scale-110">
-                     <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={stat.icon} /></svg>
-                  </div>
-                  <div>
-                     <h3 className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-1">{stat.label}</h3>
-                     <p className="text-4xl font-bold text-white tracking-tighter">{stat.value}</p>
-                  </div>
-               </div>
-            </Card>
-          ))}
+    <div className="space-y-12">
+      {/* SECTION 1: Brand Header */}
+      <div className="text-center md:text-left space-y-4 max-w-2xl">
+         <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-[#7c3aed] text-white shadow-lg mb-2">
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+         </div>
+         <h1 className="text-4xl sm:text-5xl font-bold tracking-tight text-[#fafafa]">KlyVora AI Workflow</h1>
+         <p className="text-lg text-[#a1a1aa] leading-relaxed">Turn your ideas into structured workflows using AI.</p>
       </div>
 
-      {/* Recent Activity Hint */}
-      <div className="pt-12 border-t border-white/5 opacity-50">
-         <p className="text-[10px] font-bold text-zinc-700 uppercase tracking-[0.4em] text-center">Neural Link Established &bull; All systems nominal</p>
+      {/* SECTION 2 & 3: Main Action and Intro */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+         <Card className="flex flex-col h-full bg-[#18181b] justify-center items-center md:items-start text-center md:text-left p-8 space-y-6 border-[#3f3f46]">
+            <div>
+               <h3 className="text-xl font-bold text-[#fafafa] mb-2">Start Building</h3>
+               <p className="text-[#a1a1aa] text-sm">Create a new automated sequence in seconds.</p>
+            </div>
+            <Link href="/generate" className="w-full sm:w-auto">
+               <Button className="w-full text-base font-semibold px-8 py-3.5">
+                  Generate Workflow
+               </Button>
+            </Link>
+         </Card>
+
+         <Card className="flex flex-col h-full p-8 border-[#3f3f46]">
+            <h3 className="text-lg font-bold text-[#fafafa] mb-3">About KlyVora</h3>
+            <p className="text-[#a1a1aa] text-sm leading-relaxed">
+               KlyVora helps you automate tasks using AI-powered workflows. Create, manage, and scale your workflow easily without complex coding requirements. The system connects your logic seamlessly.
+            </p>
+         </Card>
+      </div>
+
+      {/* SECTION 4: Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <Card className="flex flex-col items-center justify-center p-8 border-[#3f3f46]">
+             <span className="text-sm font-medium text-[#a1a1aa] mb-2">Total Workflows</span>
+             <span className="text-5xl font-bold text-[#fafafa]">{stats.workflows}</span>
+          </Card>
+          
+          <Card className="flex flex-col items-center justify-center p-8 border-[#3f3f46]">
+             <span className="text-sm font-medium text-[#a1a1aa] mb-2">Total Tasks</span>
+             <span className="text-5xl font-bold text-[#fafafa]">{stats.tasks}</span>
+          </Card>
       </div>
     </div>
   )

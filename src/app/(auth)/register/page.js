@@ -52,76 +52,73 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[#0f0f14] flex items-center justify-center p-6 selection:bg-purple-500/30">
-      
-      <div className="w-full max-w-sm animate-page space-y-8">
+    <div className="min-h-screen w-full bg-[#0f0f14] flex items-center justify-center p-6 animate-fade-in font-sans">
+      <div className="w-full max-w-sm space-y-6">
         
         {/* Header Section */}
         <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-tr from-purple-600 to-purple-400 shadow-xl shadow-purple-500/10 mb-6">
-             <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+          <div className="inline-flex items-center justify-center w-10 h-10 rounded-lg bg-[#7c3aed] mb-4">
+             <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
           </div>
-          <h1 className="text-2xl font-bold text-white tracking-tight underline decoration-purple-500/20 underline-offset-8">New Operator</h1>
-          <p className="text-[11px] text-zinc-600 font-extrabold uppercase tracking-[0.2em] pt-4">Neural Cluster Activation</p>
+          <h1 className="text-2xl font-bold text-[#fafafa] tracking-tight">Create an account</h1>
+          <p className="text-sm text-[#a1a1aa]">Welcome to KlyVora. Start automating today.</p>
         </div>
 
-        {/* Card Form (Glass Effect) */}
-        <Card className="p-8 border-white/5 bg-zinc-900/30 backdrop-blur-2xl rounded-2xl shadow-2xl">
-          <form onSubmit={handleRegister} className="space-y-6">
+        {/* Form Card */}
+        <Card className="border-[#3f3f46] p-6 shadow-sm">
+          <form onSubmit={handleRegister} className="space-y-5">
             {error && (
-              <div className="p-4 rounded-xl bg-danger/10 border border-danger/20 text-danger text-xs font-semibold text-center animate-fade">
+              <div className="p-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-sm mb-4">
                 {error}
               </div>
             )}
             
-            <div className="space-y-4">
-               <Input 
-                 label="Full Identifier Name" 
-                 type="text" 
-                 placeholder="Elon Musk"
-                 value={fullName}
-                 onChange={(e) => setFullName(e.target.value)}
-                 className="bg-black/20 border-white/5 h-12 rounded-xl focus:border-purple-500/50"
-                 required
-               />
+            <Input 
+              label="Full Name" 
+              type="text" 
+              placeholder="Elon Musk"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              required
+            />
 
-               <Input 
-                 label="Protocol: Email Address" 
-                 type="email" 
-                 placeholder="name@cluster.ai"
-                 value={email}
-                 onChange={(e) => setEmail(e.target.value)}
-                 className="bg-black/20 border-white/5 h-12 rounded-xl focus:border-purple-500/50"
-                 required
-               />
-               
-               <Input 
-                 label="Secret Activation Key" 
-                 type="password" 
-                 placeholder="••••••••"
-                 value={password}
-                 onChange={(e) => setPassword(e.target.value)}
-                 className="bg-black/20 border-white/5 h-12 rounded-xl focus:border-purple-500/50"
-                 required
-                 minLength={6}
-               />
-            </div>
+            <Input 
+              label="Email address" 
+              type="email" 
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+            />
+            
+            <Input 
+              label="Password" 
+              type="password" 
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+            />
             
             <Button 
                type="submit" 
-               className="w-full h-12 font-bold uppercase text-[11px] tracking-widest btn-premium shadow-lg shadow-purple-600/10 italic" 
+               className="w-full font-semibold outline-none py-3 mt-2" 
                isLoading={loading}
             >
-               Execute Initialization
+               Sign Up
             </Button>
             
-            <div className="pt-8 border-t border-white/5 mt-4 flex items-center justify-center">
-              <Link href="/login" className="text-xs font-bold text-zinc-500 hover:text-purple-400 transition-colors">
-                Already Active? <span className="underline decoration-purple-500/20 underline-offset-4 ml-1">Re-Authorize Node</span>
-              </Link>
-            </div>
           </form>
         </Card>
+        
+        {/* Footer */}
+        <p className="text-center text-sm text-[#a1a1aa] mt-6">
+          Already have an account?{' '}
+          <Link href="/login" className="text-[#fafafa] font-medium hover:underline underline-offset-4 cursor-pointer">
+            Log in
+          </Link>
+        </p>
       </div>
     </div>
   )

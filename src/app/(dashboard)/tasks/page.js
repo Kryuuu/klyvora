@@ -58,29 +58,32 @@ export default function TasksPage() {
   }
 
   async function handleDelete(id) {
-    if (!confirm('Are you sure?')) return
+    if (!confirm('Are you certain you wish to delete this task?')) return
     const { error } = await supabase.from('tasks').delete().eq('id', id)
     if (!error) setTasks(tasks.filter(t => t.id !== id))
   }
 
   return (
-    <div className="space-y-12 animate-page pb-20">
-      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/5 pb-10 gap-6">
-        <h1 className="text-3xl font-bold text-white tracking-tight">Active Tasks</h1>
-        <Badge className="bg-purple-500/5 text-purple-400 border border-purple-500/10 px-4 py-1.5 font-bold text-[10px] uppercase tracking-widest">{tasks.length} Objectives</Badge>
+    <div className="space-y-8 animate-fade-in">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-[#fafafa]">Tasks</h1>
+          <p className="text-[#a1a1aa] text-sm mt-1">Track actions required for your workflows.</p>
+        </div>
+        <Badge className="py-1.5 px-3">{tasks.length} Total Tasks</Badge>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
          {/* Sidebar Form */}
-         <Card className="lg:col-span-1 p-8 border-white/5 bg-[#12121a] rounded-2xl lg:sticky lg:top-24">
-            <h3 className="text-[10px] font-bold text-purple-400 uppercase tracking-widest mb-8 px-2 inline-block border-l-2 border-purple-500">Create Task</h3>
-            <form onSubmit={handleCreateTask} className="space-y-6">
-               <div className="space-y-1.5">
-                  <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest block px-1">Target Cluster</label>
+         <Card className="lg:col-span-1 lg:sticky lg:top-24 bg-[#18181b] border-[#3f3f46]">
+            <h3 className="text-sm font-semibold text-[#fafafa] mb-4">Add New Task</h3>
+            <form onSubmit={handleCreateTask} className="space-y-4">
+               <div>
+                  <label className="block text-sm font-medium text-[#a1a1aa] mb-1.5">Linked Workflow</label>
                   <select 
                     value={selectedWorkflowId} 
                     onChange={(e) => setSelectedWorkflowId(e.target.value)}
-                    className="w-full bg-black/40 border border-white/5 text-white h-11 rounded-xl px-4 focus:outline-none focus:border-purple-500/50 font-semibold text-sm transition-smooth"
+                    className="w-full bg-[#0f0f14] border border-[#3f3f46] text-[#fafafa] h-11 rounded-xl px-4 focus:outline-none focus:border-[#7c3aed] focus:ring-1 focus:ring-[#7c3aed] text-sm transition-colors"
                     required
                   >
                     {workflows.map(wf => (
@@ -89,65 +92,59 @@ export default function TasksPage() {
                   </select>
                </div>
                <Input 
-                 label="Protocol: Description"
-                 placeholder="Pulse objective..."
+                 label="Task Description"
+                 placeholder="e.g. Map JSON response"
                  value={newTitle}
                  onChange={(e) => setNewTitle(e.target.value)}
-                 className="bg-black/40 border-white/5 h-11"
                  required
                />
-               <Button type="submit" isLoading={creating} className="w-full h-12 font-bold uppercase tracking-widest text-[11px] btn-premium rounded-xl">
-                  Register Task
+               <Button type="submit" isLoading={creating} className="w-full text-sm">
+                  Add Task
                </Button>
             </form>
          </Card>
 
          {/* Task List (Linear style) */}
-         <div className="lg:col-span-3 space-y-4">
+         <div className="lg:col-span-3 space-y-3">
             {loading ? (
-              <div className="p-20 text-center text-zinc-600 font-bold uppercase tracking-widest text-xs animate-pulse italic">Scanning Neural Matrix...</div>
+              <div className="py-20 text-center text-[#a1a1aa] text-sm animate-pulse">Loading tasks...</div>
             ) : tasks.length === 0 ? (
-              <div className="p-24 text-center rounded-3xl border-2 border-dashed border-white/5 bg-transparent opacity-60">
-                 <p className="text-zinc-500 font-bold uppercase tracking-widest text-xs tracking-[0.3em]">No Pulse identified</p>
+              <div className="py-24 text-center border border-dashed border-[#3f3f46] rounded-2xl">
+                 <p className="text-[#a1a1aa] text-sm">No tasks assigned yet.</p>
               </div>
             ) : (
               tasks.map((task) => (
-                <Card key={task.id} className={`p-0 border-white/5 bg-zinc-900/10 hover:bg-zinc-900/20 transition-smooth group rounded-2xl overflow-hidden ${task.status === 'done' ? 'opacity-40 grayscale' : ''}`}>
-                   <div className="p-6 flex flex-col sm:flex-row justify-between sm:items-center gap-6">
-                      <div className="flex items-center gap-6 flex-1">
-                         <button 
-                            onClick={() => toggleStatus(task.id, task.status)}
-                            className={`w-6 h-6 rounded-lg border-2 transition-smooth flex items-center justify-center shrink-0 ${
-                              task.status === 'done' 
-                                ? 'bg-emerald-500 border-emerald-500 text-white' 
-                                : task.status === 'doing'
-                                ? 'bg-amber-500/20 border-amber-500 text-amber-500'
-                                : 'bg-transparent border-zinc-700 hover:border-zinc-500'
-                            }`}
-                         >
-                            {task.status === 'done' && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>}
-                            {task.status === 'doing' && <div className="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse" />}
-                         </button>
-                         <div className="space-y-0.5">
-                            <h4 className={`text-lg font-bold tracking-tight transition-smooth leading-none ${task.status === 'done' ? 'text-zinc-600 line-through' : 'text-white'}`}>
-                               {task.title}
-                            </h4>
-                            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest underline decoration-white/5 underline-offset-4">{task.workflows?.title}</p>
-                         </div>
+                <Card key={task.id} className={`p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 transition-colors ${task.status === 'done' ? 'opacity-50 bg-[#18181b]/50' : 'bg-[#18181b]'}`}>
+                   <div className="flex items-start sm:items-center gap-4 flex-1">
+                      <button 
+                         onClick={() => toggleStatus(task.id, task.status)}
+                         className={`w-5 h-5 mt-0.5 sm:mt-0 rounded-md border flex items-center justify-center shrink-0 transition-colors ${
+                           task.status === 'done' 
+                             ? 'bg-emerald-500 border-emerald-500 text-white' 
+                             : task.status === 'doing'
+                             ? 'bg-[#7c3aed]/20 border-[#7c3aed] text-[#7c3aed]'
+                             : 'bg-transparent border-[#3f3f46] hover:border-[#a1a1aa]'
+                         }`}
+                      >
+                         {task.status === 'done' && <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                         {task.status === 'doing' && <div className="w-1.5 h-1.5 rounded-sm bg-[#7c3aed]" />}
+                      </button>
+                      <div className="space-y-1">
+                         <h4 className={`text-base font-medium ${task.status === 'done' ? 'text-[#a1a1aa] line-through' : 'text-[#fafafa]'}`}>
+                            {task.title}
+                         </h4>
+                         <p className="text-xs text-[#a1a1aa] flex items-center gap-2">
+                            <span className="w-1.5 h-1.5 rounded-full bg-[#3f3f46]" />
+                            {task.workflows?.title}
+                         </p>
                       </div>
-                      <div className="flex items-center gap-6 ps-12 sm:ps-0">
-                         <Badge 
-                            className={`px-3 font-bold text-[9px] uppercase tracking-widest h-6 flex items-center border-none ${
-                               task.status === 'done' ? 'bg-emerald-500/10 text-emerald-400' : 
-                               task.status === 'doing' ? 'bg-amber-500/10 text-amber-500' : 'bg-zinc-500/10 text-zinc-400'
-                            }`}
-                         >
-                            {task.status}
-                         </Badge>
-                         <Button onClick={() => handleDelete(task.id)} variant="ghost" className="w-8 h-8 p-0 rounded-lg hover:bg-danger/10 text-zinc-800 hover:text-danger hover:scale-110 transition-smooth">
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                         </Button>
-                      </div>
+                   </div>
+                   
+                   <div className="flex items-center gap-4 pl-9 sm:pl-0">
+                      <Badge status={task.status}>{task.status}</Badge>
+                      <Button onClick={() => handleDelete(task.id)} variant="ghost" className="p-2 h-auto text-[#a1a1aa] hover:text-red-500 hover:bg-red-500/10" title="Delete Task">
+                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                      </Button>
                    </div>
                 </Card>
               ))
