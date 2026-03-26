@@ -5,8 +5,8 @@ import { createClient } from '@/lib/supabaseClient'
 import { useRouter } from 'next/navigation'
 import { Card } from '@/components/ui/Card'
 import { Button } from '@/components/ui/Button'
-import { Badge } from '@/components/ui/Badge'
 import Link from 'next/link'
+import { AnimatedHero } from '@/components/AnimatedHero'
 
 export default function DashboardPage() {
   const [profile, setProfile] = useState(null)
@@ -47,27 +47,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-16 animate-page pb-20">
-      {/* Welcome Section */}
-      <section className="space-y-6">
-         <div className="space-y-2">
-            <h1 className="text-4xl font-bold text-white tracking-tight">Welcome to KlyVora</h1>
-            <p className="text-zinc-500 text-lg font-medium">Generate AI-powered workflows to automate your tasks efficiently.</p>
-         </div>
-         
-         {/* Main CTA */}
-         <div className="pt-4 flex flex-col sm:flex-row items-center gap-6">
-            <Link href="/generate">
-               <Button className="h-14 px-10 bg-purple-600 hover:bg-purple-700 text-white font-extrabold uppercase tracking-widest text-[11px] rounded-xl shadow-lg shadow-purple-600/20">
-                  Generate Workflow &rarr;
-               </Button>
-            </Link>
-            
-            {/* Info Section */}
-            <div className="px-6 py-4 rounded-xl border border-white/5 bg-white/2">
-               <p className="text-sm text-zinc-400 font-medium italic">KlyVora helps you turn ideas into structured workflows using AI.</p>
-            </div>
-         </div>
-      </section>
+      {/* Welcome Section with Premium Animations */}
+      <AnimatedHero />
 
       {/* Stats Cards Grid (Minimalism) */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
