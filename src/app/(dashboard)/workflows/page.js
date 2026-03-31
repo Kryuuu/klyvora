@@ -67,11 +67,21 @@ export default function WorkflowsPage() {
     if (!deleteId) return
 
     try {
+      // 1. Resolve Foreign Key Constraint: Delete associated tasks first
+      const { error: tasksError } = await supabase.from('tasks').delete().eq('workflow_id', deleteId)
+      
+      if (tasksError) {
+        console.error('Failed to clear associated tasks:', tasksError)
+        alert('Failed to delete associated tasks before workflow deletion.')
+        return
+      }
+
+      // 2. Safely delete the workflow
       const { error } = await supabase.from('workflows').delete().eq('id', deleteId)
       
       if (error) {
         console.error('Delete error:', error)
-        alert(`Failed to delete: ${error.message}. Please check if there are tasks linked to this workflow.`)
+        alert(`Failed to delete: ${error.message}`)
         return
       }
       

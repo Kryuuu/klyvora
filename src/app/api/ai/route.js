@@ -61,6 +61,10 @@ export async function POST(req) {
     const aiData = await response.json()
     const contentText = aiData.candidates[0].content.parts[0].text
     
+    // --- DEBUG: Token Usage Logging ---
+    const tokenUsage = aiData.usageMetadata || {};
+    console.log(`[AI DEBUG] Token Usage for "${prompt.substring(0, 30)}...":`, tokenUsage);
+    
     // Safely parse JSON result
     let output;
     try {
@@ -78,7 +82,10 @@ export async function POST(req) {
     // Return structured payload back to frontend (which handles DB Save)
     return NextResponse.json({ 
        title: output.title, 
-       tasks: output.tasks 
+       tasks: output.tasks,
+       debug: {
+         tokens: tokenUsage
+       }
     }, { status: 200 })
     
   } catch (error) {

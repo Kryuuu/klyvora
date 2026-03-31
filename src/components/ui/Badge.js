@@ -4,14 +4,14 @@ export function Badge({
   className = '' 
 }) {
   const statusStyles = {
-    todo: 'bg-[#27272a] text-[#a1a1aa]',
-    doing: 'bg-[#7c3aed]/20 text-[#7c3aed]',
-    progress: 'bg-[#7c3aed]/20 text-[#7c3aed]', // Alias
-    done: 'bg-emerald-500/10 text-emerald-500',
+    todo: 'bg-slate-800 text-slate-300 border border-slate-700',
+    doing: 'bg-blue-500/10 text-blue-400 border border-blue-500/20',
+    progress: 'bg-blue-500/10 text-blue-400 border border-blue-500/20', // Alias
+    done: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
   }
 
   return (
-    <span className={`inline-flex px-3 py-1 rounded-full text-xs tracking-wide font-medium ${statusStyles[status] || statusStyles.todo} ${className}`}>
+    <span className={`inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium ${statusStyles[status] || statusStyles.todo} ${className}`}>
       {children}
     </span>
   )

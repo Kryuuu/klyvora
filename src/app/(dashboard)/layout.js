@@ -9,6 +9,7 @@ export default function DashboardLayout({ children }) {
   const [user, setUser] = useState(null)
   const [profileName, setProfileName] = useState('')
   const [plan, setPlan] = useState('free')
+  const [isDev, setIsDev] = useState(false)
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
   const router = useRouter()
@@ -19,6 +20,8 @@ export default function DashboardLayout({ children }) {
       
       if (user) {
         setUser(user)
+        if (user.email === process.env.NEXT_PUBLIC_DEVELOPER_EMAIL) setIsDev(true)
+
         // Fetch Profile & Plan in Parallel
         const [profRes, subRes] = await Promise.all([
            supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
@@ -41,8 +44,8 @@ export default function DashboardLayout({ children }) {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-[#0a0a0f] text-purple-500 font-medium animate-pulse uppercase tracking-[0.2em] text-xs">
-        Initializing Secure Connection...
+      <div className="flex h-screen items-center justify-center bg-slate-900 text-slate-400">
+        <div className="w-8 h-8 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin" />
       </div>
     )
   }
@@ -50,7 +53,7 @@ export default function DashboardLayout({ children }) {
   if (!user) return null
 
   return (
-    <AppShell userEmail={profileName} plan={plan}>
+    <AppShell userEmail={profileName} plan={plan} isDev={isDev}>
       {children}
     </AppShell>
   )

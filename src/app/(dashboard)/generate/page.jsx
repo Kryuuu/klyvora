@@ -79,6 +79,11 @@ export default function GeneratePage() {
       const taskInserts = result.tasks.map(taskTitle => ({ workflow_id: newWf.id, title: taskTitle, status: 'todo' }))
       if (taskInserts.length > 0) await supabase.from('tasks').insert(taskInserts)
 
+      // --- DEBUG TOKEN USAGE ---
+      if (result.debug?.tokens) {
+         console.log('[AI DEBUG] Execution Token Usage:', result.debug.tokens)
+      }
+
       setGeneratedData(result)
       setPrompt('')
     } catch (err) {
@@ -200,7 +205,14 @@ export default function GeneratePage() {
                  <div className="bg-gradient-to-br from-[#7c3aed]/10 via-transparent to-transparent p-12 border-b border-[#3f3f46]/30 relative">
                     <div className="flex justify-between items-start mb-8">
                        <Badge className="bg-emerald-500 text-black border-none px-4 py-1.5 font-black text-[9px] uppercase tracking-widest italic rounded-lg">Synthesis Resolved</Badge>
-                       <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest opacity-40">Matrix Audit ID: #{Math.floor(Math.random() * 99999)}</span>
+                       <div className="flex flex-col items-end">
+                          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest opacity-40">Matrix Audit ID: #{Math.floor(Math.random() * 99999)}</span>
+                          {generatedData.debug?.tokens && (
+                            <span className="text-[10px] font-bold text-blue-400 mt-2 bg-blue-500/10 px-2 py-1 rounded">
+                               Debug Tokens: {generatedData.debug.tokens.totalTokenCount} (P: {generatedData.debug.tokens.promptTokenCount} | C: {generatedData.debug.tokens.candidatesTokenCount})
+                            </span>
+                          )}
+                       </div>
                     </div>
                     <h2 className="text-5xl font-black text-white tracking-tighter italic uppercase underline decoration-[#7c3aed] decoration-8 underline-offset-8 decoration-skip-ink-0 leading-none">{generatedData.title}</h2>
                  </div>

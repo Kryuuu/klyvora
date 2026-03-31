@@ -7,6 +7,9 @@ const menuItems = [
   { name: 'Dashboard', href: '/dashboard', icon: 'M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6' },
   { name: 'Workflows', href: '/workflows', icon: 'M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z' },
   { name: 'Tasks', href: '/tasks', icon: 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01' },
+  { name: 'Vision', href: '/vision', icon: 'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z' },
+  { name: 'Community', href: '/community', icon: 'M17 8h2a2 2 0 012 2v6a2 2 0 01-2 2h-2v4l-4-4H9a1.994 1.994 0 01-1.414-.586m0 0L11 14h4a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2v4l.586-.586z' },
+  { name: 'Network', href: '/network', icon: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z' },
   { name: 'Subscription', href: '/subscription', icon: 'M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z' },
 ]
 
@@ -14,14 +17,14 @@ export function Sidebar({ onNavigate }) {
   const pathname = usePathname()
 
   return (
-    <div className="flex flex-col h-full bg-[#18181b]">
+    <div className="flex flex-col h-full bg-transparent">
       {/* Brand Header */}
-      <div className="h-20 flex items-center px-6 border-b border-white/5 bg-black/20">
-        <Link href="/dashboard" className="flex items-center space-x-4 group" onClick={onNavigate}>
-           <div className="w-10 h-10 flex items-center justify-center transition-all duration-500 group-hover:scale-110 group-hover:rotate-6 relative">
+      <div className="h-20 flex items-center px-6 border-b border-slate-800">
+        <Link href="/dashboard" className="flex items-center space-x-3 group" onClick={onNavigate}>
+           <div className="w-8 h-8 flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
               <img src="/logo-klyvora.png" alt="KlyVora Logo" className="w-full h-full object-contain" />
            </div>
-           <span className="font-black text-xl tracking-tighter text-white uppercase italic group-hover:text-purple-400 transition-colors">KlyVora</span>
+           <span className="font-bold text-lg tracking-tight text-white transition-colors group-hover:text-slate-300">KlyVora</span>
         </Link>
       </div>
       
@@ -34,13 +37,13 @@ export function Sidebar({ onNavigate }) {
                 key={item.name}
                 href={item.href}
                 onClick={onNavigate}
-                className={`flex items-center px-3 py-2.5 rounded-xl transition-colors ${
+                className={`flex items-center px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
                    isActive
-                     ? 'bg-[#27272a] text-[#fafafa] font-medium'
-                     : 'text-[#a1a1aa] hover:bg-[#27272a] hover:text-[#fafafa]'
+                     ? 'bg-slate-800 text-white'
+                     : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
                 }`}
              >
-                <svg className={`w-5 h-5 mr-3 ${isActive ? 'text-[#7c3aed]' : 'text-[#a1a1aa]'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-blue-500' : 'text-slate-500 group-hover:text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
                 {item.name}
@@ -49,8 +52,8 @@ export function Sidebar({ onNavigate }) {
         })}
       </div>
 
-      <div className="p-4 border-t border-[#3f3f46]">
-         <div className="text-xs text-[#a1a1aa] px-2 text-center">KlyVora</div>
+      <div className="p-4 border-t border-slate-800">
+         <div className="text-xs text-slate-500 px-2 text-center">KlyVora v2.4</div>
       </div>
     </div>
   )
