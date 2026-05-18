@@ -1,5 +1,7 @@
 import { createBrowserClient } from '@supabase/ssr'
 
+let browserClient
+
 /**
  * Creates a Supabase client for use in Client Components.
  * Following strict senior engineering rules for production.
@@ -12,5 +14,9 @@ export function createClient() {
     console.error('[Supabase Config Alarm]: URL or Anon Key is missing in env.')
   }
 
-  return createBrowserClient(supabaseUrl, supabaseAnonKey)
+  if (!browserClient) {
+    browserClient = createBrowserClient(supabaseUrl, supabaseAnonKey)
+  }
+
+  return browserClient
 }

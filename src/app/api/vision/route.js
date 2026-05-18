@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { fetchWithTimeout } from '@/lib/serverFetch'
 
 export async function POST(req) {
   try {
@@ -72,7 +73,7 @@ export async function POST(req) {
 
     // 4. Send Request to Google Generative Language API
     // Pointing directly to the newly branded gemini-2.5-flash-image model
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`, {
+    const response = await fetchWithTimeout(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-image:generateContent?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -135,7 +136,7 @@ export async function POST(req) {
     }, { status: 200 })
 
   } catch (err) {
-    console.error('[VISION ROUTE ERROR]', err)
+    console.error('[VISION ROUTE ERROR]', err?.message || err)
     return NextResponse.json({ error: err.message || 'Unknown server error.' }, { status: 500 })
   }
 }

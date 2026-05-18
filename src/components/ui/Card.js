@@ -1,7 +1,7 @@
 export function Card({ children, className = '', ...props }) {
   return (
     <div 
-      className={`bg-slate-800 border border-slate-700 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-6 ${className}`}
+      className={`glass-card rounded-[28px] transition-all duration-300 p-6 ${className}`}
       {...props}
     >
       {children}

@@ -1,11 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Script from 'next/script'
 import { createClient } from '@/lib/supabaseClient'
-import { Card } from "@/components/ui/Card"
-import { Button } from "@/components/ui/Button"
-import { Badge } from "@/components/ui/Badge"
-import { Modal } from "@/components/ui/Modal"
+import { getClientSessionUser } from '@/lib/authClient'
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Modal } from '@/components/ui/Modal'
 
 export default function SubscriptionPage() {
   const [loading, setLoading] = useState(false)
@@ -18,7 +20,7 @@ export default function SubscriptionPage() {
   useEffect(() => {
     async function loadData() {
       setChecking(true)
-      const { data: { user } } = await supabase.auth.getUser()
+      const user = await getClientSessionUser(supabase)
       if (user) {
         setUser(user)
         const { data: sub } = await supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle()
@@ -26,6 +28,7 @@ export default function SubscriptionPage() {
       }
       setChecking(false)
     }
+
     loadData()
   }, [supabase])
 
@@ -35,37 +38,52 @@ export default function SubscriptionPage() {
       const res = await fetch('/api/payment', { method: 'POST', headers: { 'Content-Type': 'application/json' } })
       const data = await res.json()
       if (data.token) {
-        // @ts-ignore
+        if (!window.snap) {
+          throw new Error('Payment script is still loading. Please try again in a moment.')
+        }
+
         window.snap.pay(data.token, {
-          onSuccess: (result) => { 
-            setModal({ isOpen: true, title: 'Payment Success', message: 'Mission accomplished. Your neural tiers have been expanded.', variant: 'primary' });
-            setTimeout(() => window.location.reload(), 2000);
+          onSuccess: () => {
+            setModal({ isOpen: true, title: 'Payment Success', message: 'Your neural tiers have been expanded successfully.', variant: 'primary' })
+            setTimeout(() => window.location.reload(), 2000)
           },
-          onPending: (result) => { 
-            setModal({ isOpen: true, title: 'Payment Pending', message: 'Expansion signal is being processed. Please wait.', variant: 'primary' });
+          onPending: () => {
+            setModal({ isOpen: true, title: 'Payment Pending', message: 'The upgrade signal is still processing.', variant: 'primary' })
           },
-          onError: (result) => { 
-            setModal({ isOpen: true, title: 'Expansion Failed', message: 'Mission failed. Could not verify expansion signal.', variant: 'danger' });
+          onError: () => {
+            setModal({ isOpen: true, title: 'Expansion Failed', message: 'Could not verify the payment signal.', variant: 'danger' })
           },
-          onClose: () => { console.log('Snap Closed') }
+          onClose: () => {},
         })
       } else {
         throw new Error(data.error || 'Failed to initialize payment')
       }
     } catch (err) {
-      setModal({ isOpen: true, title: 'System Error', message: err.message, variant: 'danger' });
+      setModal({ isOpen: true, title: 'System Error', message: err.message, variant: 'danger' })
     } finally {
       setLoading(false)
     }
   }
 
-  if (checking) return <div className="p-8 text-zinc-500 font-black uppercase tracking-[0.4em] text-xs animate-pulse italic">Verifying Neural Subscription...</div>
+  if (checking) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Card className="rounded-[30px] p-8 text-center">
+          <div className="mx-auto mb-4 h-14 w-14 rounded-2xl border border-white/10 bg-white/[0.04] animate-pulse" />
+          <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Verifying subscription</div>
+        </Card>
+      </div>
+    )
+  }
 
   const isPro = subscription?.plan === 'pro' && subscription?.status === 'active'
 
+  const freeFeatures = ['3 active clusters', 'Standard AI synthesis', 'Community support']
+  const proFeatures = ['Unlimited operational clusters', 'Priority neural processing', 'Full integration support', 'Advanced command center layouts']
+
   return (
-    <div className="max-w-5xl mx-auto space-y-16 animate-slide-up pb-24">
-      <Modal 
+    <div className="mx-auto max-w-6xl space-y-8 pb-8 animate-fade-in">
+      <Modal
         isOpen={modal.isOpen}
         onClose={() => setModal({ ...modal, isOpen: false })}
         onConfirm={() => setModal({ ...modal, isOpen: false })}
@@ -74,68 +92,111 @@ export default function SubscriptionPage() {
         variant={modal.variant}
         confirmText="Acknowledge"
       />
+
       <div className="text-center space-y-4">
-        <Badge className="bg-purple-500/10 text-purple-400 border-none px-6 py-2 font-black italic tracking-[0.2em] text-[10px]">Neural Tier Selection</Badge>
-        <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase underline decoration-purple-500/20 underline-offset-[12px]">Pro Access Engine</h1>
-        <p className="text-zinc-500 max-w-lg mx-auto font-medium italic">Upgrade to the pro-tier to unlock unlimited neural throughput across all clusters.</p>
+        <Badge status="pro">Neural tier selection</Badge>
+        <h1 className="text-5xl font-semibold tracking-tight text-white">Upgrade to Pro</h1>
+        <p className="mx-auto max-w-2xl text-sm leading-7 text-slate-400">Unlock a more powerful KlyVora workspace with unlimited clusters, priority processing, and full integration support.</p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 items-stretch">
-        <Card className="p-10 border-white/5 bg-[#0a0a0f] border-t-4 border-t-purple-500 flex flex-col justify-between h-full min-h-[400px] shadow-2xl">
-          <div className="space-y-8">
-            <div className="space-y-2">
-               <Badge status={isPro ? 'done' : 'default'} className="px-4 font-black uppercase tracking-widest text-[9px]">Identity Verification</Badge>
-               <h2 className="text-4xl font-black text-white italic tracking-tighter uppercase">{isPro ? 'Pro Operator' : 'Free Operator'}</h2>
+      <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
+        <Card className="rounded-[34px] p-8">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Current status</div>
+              <h2 className="mt-2 text-3xl font-semibold text-white">{isPro ? 'Pro Operator' : 'Free Operator'}</h2>
+              <p className="mt-3 text-sm leading-7 text-slate-400">Your current plan determines how many clusters you can operate and which synthesis features remain available.</p>
             </div>
-            <p className="text-zinc-500 leading-relaxed font-medium italic opacity-80">Your neural node is currently restricted to the Level-1 Operator tier (Max 3 Active Clusters). Upgrade to expand throughput.</p>
+            <Badge status={isPro ? 'done' : 'neutral'}>{isPro ? 'Pro active' : 'Free plan'}</Badge>
           </div>
-          <div className="mt-12 pt-8 border-t border-white/5 flex flex-col space-y-2">
-             <span className="text-[10px] text-zinc-700 font-black uppercase tracking-[0.3em] leading-none">Logged Identifier</span>
-             <p className="text-xs text-white font-black italic opacity-50 truncate tracking-tight">{user?.email}</p>
+
+          <div className="mt-8 rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
+            <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Logged identity</div>
+            <div className="mt-2 truncate text-lg text-white">{user?.email}</div>
+          </div>
+
+          <div className="mt-8 space-y-3">
+            {freeFeatures.map((feature) => (
+              <div key={feature} className="flex items-center gap-3 rounded-[22px] border border-white/10 bg-white/[0.03] p-4 text-sm text-slate-300">
+                <span className="h-2.5 w-2.5 rounded-full bg-slate-500" />
+                {feature}
+              </div>
+            ))}
           </div>
         </Card>
 
-        {!isPro ? (
-          <Card className="p-10 border-purple-500/20 bg-purple-600/5 shadow-3xl shadow-purple-600/10 flex flex-col justify-between h-full min-h-[400px] relative overflow-hidden group">
-             <div className="absolute top-0 right-0 w-32 h-32 bg-purple-600/10 blur-3xl rounded-full translate-x-12 translate-y-[-12px] group-hover:bg-purple-600/20 transition-all duration-700" />
-             <div className="relative z-10">
-                <div className="flex justify-between items-start mb-12">
-                   <div>
-                      <h2 className="text-3xl font-black text-white italic tracking-tighter uppercase mb-1">Unlimited</h2>
-                      <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest">Protocol Expansion</p>
-                   </div>
-                   <div className="text-right">
-                      <span className="text-4xl font-black text-white italic tracking-tighter underline decoration-purple-500/40">Rp49k</span>
-                      <span className="text-[9px] text-zinc-600 block font-black uppercase tracking-widest mt-2 italic">Standard Single Charge</span>
-                   </div>
+        <Card className="relative overflow-hidden rounded-[34px] p-8 border-cyan-400/20 bg-cyan-400/[0.05]">
+          <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-cyan-400/10 blur-[80px]" />
+          <div className="relative z-10">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <div className="text-xs uppercase tracking-[0.28em] text-cyan-300">Pro plan</div>
+                <h2 className="mt-2 text-4xl font-semibold tracking-tight text-white">Unlimited</h2>
+                <p className="mt-2 text-sm text-slate-400">Everything you need for a premium operational workspace.</p>
+              </div>
+              <div className="text-right">
+                <div className="text-4xl font-semibold text-white">Rp49k</div>
+                <div className="mt-1 text-[10px] uppercase tracking-[0.26em] text-slate-500">One-time upgrade</div>
+              </div>
+            </div>
+
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              {proFeatures.map((feature) => (
+                <div key={feature} className="rounded-[24px] border border-white/10 bg-slate-950/50 p-4 text-sm text-slate-200">
+                  <div className="mb-3 flex h-9 w-9 items-center justify-center rounded-2xl bg-cyan-400/10 text-cyan-200">
+                    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+                  </div>
+                  {feature}
                 </div>
-                <ul className="space-y-5 mb-12">
-                  {['Unlimited Neural Clusters', 'Access to Gemini 2.0 Force', 'Priority Signal Response', 'Full Operational Audit Log'].map((feat, i) => (
-                    <li key={i} className="flex items-center text-xs font-black italic text-zinc-400 uppercase tracking-tight">
-                      <div className="w-5 h-5 rounded-lg bg-purple-500/20 flex items-center justify-center mr-4">
-                         <svg className="w-3 h-3 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
-                      </div>
-                      {feat}
-                    </li>
-                  ))}
-                </ul>
-             </div>
-             <Button onClick={handleCheckout} isLoading={loading} className="w-full h-16 bg-purple-500 hover:bg-purple-600 font-black uppercase text-xs tracking-[0.3em] shadow-purple-600/30 italic">
-                Initialize Expansion Signal
-             </Button>
-          </Card>
-        ) : (
-          <Card className="p-12 border-emerald-500/20 bg-emerald-500/5 shadow-2xl h-full flex flex-col items-center justify-center text-center">
-             <div className="w-20 h-20 rounded-[32px] bg-emerald-500/10 flex items-center justify-center mb-10 shadow-[0_0_30px_rgba(16,185,129,0.2)]">
-                 <svg className="w-10 h-10 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-             </div>
-             <h3 className="text-3xl font-black text-white mb-4 italic tracking-tighter uppercase italic">Maximum Capacity: ONLINE</h3>
-             <p className="text-sm text-zinc-600 font-medium italic max-w-xs mx-auto">Your neural cluster is currently running at unlimited operational capacity. All protocols are unrestricted.</p>
-          </Card>
-        )}
+              ))}
+            </div>
+
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Button onClick={handleCheckout} isLoading={loading} className="h-14 flex-1 text-xs font-semibold uppercase tracking-[0.22em]">
+                {isPro ? 'Plan already active' : 'Upgrade to Pro'}
+              </Button>
+              <div className="flex-1 rounded-[24px] border border-white/10 bg-white/[0.03] p-4 text-xs uppercase tracking-[0.24em] text-slate-500">
+                Priority neural processing and unlimited operational clusters.
+              </div>
+            </div>
+          </div>
+        </Card>
       </div>
 
-      <script src="https://app.sandbox.midtrans.com/snap/snap.js" data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY} async></script>
+      <Card className="rounded-[34px] p-8">
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div>
+            <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Comparison</div>
+            <h3 className="mt-2 text-2xl font-semibold text-white">Free vs Pro</h3>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="rounded-[26px] border border-white/10 bg-white/[0.03] p-5">
+              <div className="text-lg font-medium text-white">Free</div>
+              <div className="mt-3 text-3xl font-semibold text-white">$0</div>
+              <div className="mt-4 space-y-2 text-sm text-slate-400">
+                <div>3 operational clusters</div>
+                <div>Standard synthesis speed</div>
+                <div>Basic support</div>
+              </div>
+            </div>
+            <div className="rounded-[26px] border border-cyan-400/20 bg-cyan-400/[0.06] p-5">
+              <div className="text-lg font-medium text-white">Pro</div>
+              <div className="mt-3 text-3xl font-semibold text-white">Rp49k</div>
+              <div className="mt-4 space-y-2 text-sm text-slate-200">
+                <div>Unlimited operational clusters</div>
+                <div>Priority neural processing</div>
+                <div>Full integration support</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Script
+        src="https://app.sandbox.midtrans.com/snap/snap.js"
+        data-client-key={process.env.NEXT_PUBLIC_MIDTRANS_CLIENT_KEY}
+        strategy="afterInteractive"
+      />
     </div>
   )
 }

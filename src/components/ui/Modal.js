@@ -21,48 +21,44 @@ export function Modal({
   if (!isOpen) return null
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 animate-fade-in">
-      {/* 🌌 Dark Backdrop Layer */}
-      <div 
-        className="absolute inset-0 bg-black/80 backdrop-blur-sm" 
-        onClick={onClose} 
-      />
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6 animate-fade-in">
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={onClose} />
 
-      {/* 🚀 Modal Body Card */}
-      <Card className="max-w-md w-full p-0 border-white/10 bg-[#0f0f14] overflow-hidden shadow-[0_50px_100px_rgba(0,0,0,0.8)] animate-slide-up relative rounded-[40px]">
-        {/* Glow Element */}
-        <div className={`absolute top-0 left-0 w-full h-1.5 ${variant === 'danger' ? 'bg-red-500' : variant === 'success' ? 'bg-emerald-500' : 'bg-[#7c3aed]'} opacity-50 shadow-[0_4px_20px_rgba(0,0,0,0.5)]`} />
-        
-        <div className="p-10 text-center space-y-8">
-            <div className={`w-16 h-16 mx-auto rounded-[24px] flex items-center justify-center ${variant === 'danger' ? 'bg-red-500/10 text-red-500' : variant === 'success' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-purple-500/10 text-purple-500'} mb-4`}>
-                {variant === 'danger' ? (
-                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                ) : variant === 'success' ? (
-                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
-                ) : (
-                   <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                )}
-            </div>
-            
-            <div className="space-y-3">
-                <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase">{title}</h3>
-                <p className="text-zinc-500 text-sm font-medium italic leading-relaxed max-w-[280px] mx-auto">{message}</p>
-            </div>
+      <Card className="relative w-full max-w-md overflow-hidden rounded-[32px] border-white/10 p-0 shadow-[0_40px_120px_rgba(0,0,0,0.7)] animate-slide-up">
+        <div className={`h-1.5 w-full ${variant === 'danger' ? 'bg-gradient-to-r from-red-500 to-orange-400' : variant === 'success' ? 'bg-gradient-to-r from-emerald-400 to-cyan-400' : 'bg-gradient-to-r from-cyan-400 via-blue-500 to-violet-500'}`} />
+        <div className="p-8 sm:p-10 text-center space-y-6">
+          <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border ${variant === 'danger' ? 'border-red-400/20 bg-red-400/10 text-red-200' : variant === 'success' ? 'border-emerald-400/20 bg-emerald-400/10 text-emerald-200' : 'border-cyan-400/20 bg-cyan-400/10 text-cyan-200'}`}>
+            {variant === 'danger' ? (
+              <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v4m0 4h.01M10.29 3.86l-8.43 14.5A2 2 0 003.58 21h16.84a2 2 0 001.72-2.64l-8.43-14.5a2 2 0 00-3.42 0z" /></svg>
+            ) : variant === 'success' ? (
+              <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" /></svg>
+            ) : (
+              <svg className="h-7 w-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 16h-1v-4h-1m1-4h.01M12 22a10 10 0 100-20 10 10 0 000 20z" /></svg>
+            )}
+          </div>
 
-            <div className="flex flex-col gap-3 pt-4">
-                <Button 
-                   onClick={() => { onConfirm(); onClose(); }}
-                   className={`h-14 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] italic ${variant === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-600/20' : variant === 'success' ? 'bg-emerald-600 hover:bg-emerald-700 shadow-emerald-600/20' : 'bg-[#7c3aed] hover:bg-[#8b5cf6] shadow-purple-600/20'}`}
-                >
-                   {confirmText}
-                </Button>
-                <button 
-                  onClick={onClose}
-                  className="h-12 rounded-2xl text-[9px] font-black uppercase tracking-widest text-zinc-600 hover:text-white transition-colors italic"
-                >
-                   {cancelText}
-                </button>
-            </div>
+          <div className="space-y-3">
+            <h3 className="text-2xl font-semibold tracking-tight text-white">{title}</h3>
+            <p className="mx-auto max-w-xs text-sm leading-relaxed text-slate-400">{message}</p>
+          </div>
+
+          <div className="flex flex-col gap-3 pt-2">
+            <Button 
+              onClick={() => {
+                onConfirm()
+                onClose()
+              }}
+              className={`h-12 rounded-2xl text-xs font-semibold uppercase tracking-[0.22em] ${variant === 'danger' ? 'bg-gradient-to-r from-red-500 to-orange-500 text-white' : variant === 'success' ? 'bg-gradient-to-r from-emerald-500 to-cyan-400 text-slate-950' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'}`}
+            >
+              {confirmText}
+            </Button>
+            <button 
+              onClick={onClose}
+              className="h-11 rounded-2xl border border-white/10 bg-white/[0.03] text-[10px] font-semibold uppercase tracking-[0.22em] text-slate-400 transition-colors hover:border-white/20 hover:text-white"
+            >
+              {cancelText}
+            </button>
+          </div>
         </div>
       </Card>
     </div>

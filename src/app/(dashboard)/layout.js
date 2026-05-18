@@ -1,56 +1,32 @@
-'use client'
-
+import { redirect } from 'next/navigation'
 import { AppShell } from '@/components/AppShell'
-import { createClient } from '@/lib/supabaseClient'
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 
-export default function DashboardLayout({ children }) {
-  const [user, setUser] = useState(null)
-  const [profileName, setProfileName] = useState('')
-  const [plan, setPlan] = useState('free')
-  const [isDev, setIsDev] = useState(false)
-  const [loading, setLoading] = useState(true)
-  const supabase = createClient()
-  const router = useRouter()
+export default async function DashboardLayout({ children }) {
+  const supabase = await createClient()
 
-  useEffect(() => {
-    async function checkUser() {
-      const { data: { user }, error } = await supabase.auth.getUser()
-      
-      if (user) {
-        setUser(user)
-        if (user.email === process.env.NEXT_PUBLIC_DEVELOPER_EMAIL) setIsDev(true)
+  let user = null
 
-        // Fetch Profile & Plan in Parallel
-        const [profRes, subRes] = await Promise.all([
-           supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
-           supabase.from('subscriptions').select('plan, status').eq('user_id', user.id).maybeSingle()
-        ])
-
-        if (profRes.data?.name) setProfileName(profRes.data.name)
-        else setProfileName(user.email.split('@')[0])
-
-        if (subRes.data && subRes.data.plan === 'pro' && subRes.data.status === 'active') {
-          setPlan('pro')
-        }
-      } else {
-        router.push('/login')
-      }
-      setLoading(false)
-    }
-    checkUser()
-  }, [supabase, router])
-
-  if (loading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-slate-900 text-slate-400">
-        <div className="w-8 h-8 border-4 border-slate-700 border-t-blue-500 rounded-full animate-spin" />
-      </div>
-    )
+  try {
+    const userResponse = await supabase.auth.getUser()
+    user = userResponse.data.user
+  } catch {
+    const sessionResponse = await supabase.auth.getSession()
+    user = sessionResponse.data.session?.user || null
   }
 
-  if (!user) return null
+  if (!user) {
+    redirect('/login')
+  }
+
+  const [profileRes, subscriptionRes] = await Promise.all([
+    supabase.from('profiles').select('name').eq('id', user.id).maybeSingle(),
+    supabase.from('subscriptions').select('plan, status').eq('user_id', user.id).maybeSingle(),
+  ])
+
+  const profileName = profileRes.data?.name || user.email.split('@')[0]
+  const isDev = user.email === process.env.NEXT_PUBLIC_DEVELOPER_EMAIL
+  const plan = subscriptionRes.data?.plan === 'pro' && subscriptionRes.data?.status === 'active' ? 'pro' : 'free'
 
   return (
     <AppShell userEmail={profileName} plan={plan} isDev={isDev}>

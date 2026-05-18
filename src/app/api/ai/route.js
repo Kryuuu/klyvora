@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { fetchWithTimeout } from '@/lib/serverFetch'
 
 export async function POST(req) {
   try {
@@ -42,7 +43,7 @@ export async function POST(req) {
       Do NOT wrap in markdown \`\`\`json. Return strictly the raw JSON object.
     `
 
-    const response = await fetch(apiUrl, {
+    const response = await fetchWithTimeout(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -54,8 +55,8 @@ export async function POST(req) {
     })
 
     if (!response.ok) {
-       const errJson = await response.json()
-       throw new Error(`Google API Error: ${errJson.error?.message || 'Unknown error'}`)
+       const errJson = await response.json().catch(() => null)
+       throw new Error(`Google API Error: ${errJson?.error?.message || response.statusText || 'Unknown error'}`)
     }
 
     const aiData = await response.json()
@@ -69,7 +70,7 @@ export async function POST(req) {
     let output;
     try {
         output = JSON.parse(contentText)
-    } catch (parseError) {
+    } catch {
         console.error("Gemini failed returning strict JSON:", contentText)
         return NextResponse.json({ error: 'AI output format was invalid.' }, { status: 500 })
     }
@@ -89,7 +90,7 @@ export async function POST(req) {
     }, { status: 200 })
     
   } catch (error) {
-    console.error('AI Backend Route Error:', error)
+    console.error('AI Backend Route Error:', error?.message || error)
     return NextResponse.json({ error: error.message || 'Failed to generate workflow securely' }, { status: 500 })
   }
 }

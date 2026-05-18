@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 
 const menuItems = [
@@ -17,19 +18,27 @@ export function Sidebar({ onNavigate }) {
   const pathname = usePathname()
 
   return (
-    <div className="flex flex-col h-full bg-transparent">
-      {/* Brand Header */}
-      <div className="h-20 flex items-center px-6 border-b border-slate-800">
-        <Link href="/dashboard" className="flex items-center space-x-3 group" onClick={onNavigate}>
-           <div className="w-8 h-8 flex items-center justify-center transition-transform duration-200 group-hover:scale-105">
-              <img src="/logo-klyvora.png" alt="KlyVora Logo" className="w-full h-full object-contain" />
-           </div>
-           <span className="font-bold text-lg tracking-tight text-white transition-colors group-hover:text-slate-300">KlyVora</span>
+    <div className="flex h-full flex-col bg-transparent">
+      <div className="border-b border-white/10 px-6 py-6">
+        <Link href="/dashboard" className="group flex items-center gap-3" onClick={onNavigate}>
+          <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.03] p-2 transition-transform duration-300 group-hover:scale-105">
+            <Image src="/logo-klyvora.png" alt="KlyVora Logo" width={28} height={28} className="h-full w-full object-contain" />
+          </div>
+          <div>
+            <div className="text-lg font-semibold tracking-tight text-white">KlyVora</div>
+            <div className="text-[10px] uppercase tracking-[0.3em] text-slate-500">Neural Workspace</div>
+          </div>
         </Link>
+        <div className="mt-5 rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+          <div className="text-[10px] uppercase tracking-[0.28em] text-slate-500">Operational Status</div>
+          <div className="mt-2 flex items-center gap-2 text-sm text-slate-100">
+            <span className="h-2.5 w-2.5 rounded-full bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)]" />
+            Online and synced
+          </div>
+        </div>
       </div>
       
-      {/* Navigation */}
-      <div className="flex-1 py-6 px-4 space-y-1 overflow-y-auto">
+      <div className="flex-1 space-y-2 overflow-y-auto px-3 py-4">
         {menuItems.map((item) => {
           const isActive = pathname.startsWith(item.href)
           return (
@@ -37,13 +46,13 @@ export function Sidebar({ onNavigate }) {
                 key={item.name}
                 href={item.href}
                 onClick={onNavigate}
-                className={`flex items-center px-3 py-2 rounded-lg transition-colors text-sm font-medium ${
+                className={`group flex items-center rounded-2xl px-4 py-3 text-sm font-medium transition-all ${
                    isActive
-                     ? 'bg-slate-800 text-white'
-                     : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                     ? 'border border-cyan-400/20 bg-cyan-400/[0.08] text-white shadow-[0_14px_40px_rgba(34,211,238,0.1)]'
+                     : 'border border-transparent text-slate-400 hover:border-white/10 hover:bg-white/[0.03] hover:text-white'
                 }`}
              >
-                <svg className={`w-5 h-5 mr-3 transition-colors ${isActive ? 'text-blue-500' : 'text-slate-500 group-hover:text-slate-400'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className={`mr-3 h-5 w-5 transition-colors ${isActive ? 'text-cyan-300' : 'text-slate-500 group-hover:text-slate-300'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d={item.icon} />
                 </svg>
                 {item.name}
@@ -52,8 +61,11 @@ export function Sidebar({ onNavigate }) {
         })}
       </div>
 
-      <div className="p-4 border-t border-slate-800">
-         <div className="text-xs text-slate-500 px-2 text-center">KlyVora v2.4</div>
+      <div className="border-t border-white/10 p-4">
+         <div className="rounded-[22px] border border-white/10 bg-white/[0.03] p-4">
+            <div className="text-[10px] uppercase tracking-[0.28em] text-slate-500">KlyVora v2.4</div>
+            <div className="mt-2 text-sm text-slate-200">Future-ready workspace orchestration.</div>
+         </div>
       </div>
     </div>
   )

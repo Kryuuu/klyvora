@@ -1,55 +1,38 @@
-import { createServerClient } from '@supabase/ssr'
 import { NextResponse } from 'next/server'
 
-export async function proxy(request) {
-  let supabaseResponse = NextResponse.next({
-    request,
-  })
+function hasSupabaseSessionCookie(request) {
+  return request.cookies
+    .getAll()
+    .some((cookie) => (
+      cookie.name === 'supabase-auth-token' ||
+      cookie.name.startsWith('supabase-auth-token.') ||
+      (cookie.name.startsWith('sb-') && cookie.name.includes('auth-token'))
+    ))
+}
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll()
-        },
-        setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
-          supabaseResponse = NextResponse.next({
-            request,
-          })
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          )
-        },
-      },
-    }
-  )
+export function proxy(request) {
+  const pathname = request.nextUrl.pathname
+  const isAuthRoute = pathname.startsWith('/login') || pathname.startsWith('/register')
+  const isProtectedAppRoute = !isAuthRoute && pathname !== '/'
+  const hasSession = hasSupabaseSessionCookie(request)
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  const isAuthRoute = request.nextUrl.pathname.startsWith('/login') || request.nextUrl.pathname.startsWith('/register')
-
-  if (!user && !isAuthRoute && request.nextUrl.pathname !== '/') {
+  if (!hasSession && isProtectedAppRoute) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  if (user && isAuthRoute) {
-     const url = request.nextUrl.clone()
-     url.pathname = '/dashboard'
-     return NextResponse.redirect(url)
+  if (hasSession && isAuthRoute) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/dashboard'
+    return NextResponse.redirect(url)
   }
 
-  return supabaseResponse
+  return NextResponse.next()
 }
 
 export const config = {
   matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
+    '/((?!api|_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
   ],
 }

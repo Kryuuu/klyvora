@@ -1,64 +1,80 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { createClient } from "@/lib/supabaseClient"
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabaseClient'
+import { getClientSessionUser } from '@/lib/authClient'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Card } from "@/components/ui/Card"
-import { Button } from "@/components/ui/Button"
-import { Badge } from "@/components/ui/Badge"
+import { Card } from '@/components/ui/Card'
+import { Button } from '@/components/ui/Button'
+import { Badge } from '@/components/ui/Badge'
+import { Modal } from '@/components/ui/Modal'
 
 export default function GeneratePage() {
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [generatedData, setGeneratedData] = useState(null)
-  
   const [isFreeLimit, setIsFreeLimit] = useState(false)
   const [isChecking, setIsChecking] = useState(true)
+  const [showLimitModal, setShowLimitModal] = useState(false)
 
   const router = useRouter()
   const supabase = createClient()
 
   const templates = [
-    { title: "SaaS Onboarding", prompt: "Create a complete user onboarding workflow for a SaaS application including email verification, profile setup, and tutorial walkthrough." },
-    { title: "E-commerce Ops", prompt: "Generate an automated logistics workflow for an online store covering order processing, inventory sync, shipping label generation, and customer notification." },
-    { title: "Content Engine", prompt: "Build a high-performance content marketing sequence from keyword research to blog writing, social media distribution, and performance tracking." },
-    { title: "DevOps Pipeline", prompt: "Construct a CI/CD automated pipeline sequence for a cloud-native microservice from code commit to staging deploy and monitoring." }
+    { title: 'E-commerce', prompt: 'Build an automated ecommerce workflow with order handling, inventory sync, fulfillment, and customer notifications.' },
+    { title: 'DevOps', prompt: 'Create a deployment workflow that covers commit validation, test execution, rollout, monitoring, and rollback readiness.' },
+    { title: 'Content', prompt: 'Generate a content production system from research to drafting, publishing, distribution, and analytics review.' },
+    { title: 'Startup', prompt: 'Design a lean startup execution workflow for launch planning, activation, growth tracking, and retention loops.' },
+    { title: 'Personal Productivity', prompt: 'Assemble a personal operating system for prioritization, planning, deep work, and weekly review.' },
   ]
 
   useEffect(() => {
     async function checkSub() {
       setIsChecking(true)
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { setIsChecking(false); return }
-      
+      const user = await getClientSessionUser(supabase)
+      if (!user) {
+        setIsChecking(false)
+        return
+      }
+
       const { data: sub } = await supabase.from('subscriptions').select('plan, status').eq('user_id', user.id).maybeSingle()
       if (sub && sub.plan === 'pro' && sub.status === 'active') {
-         setIsFreeLimit(false)
-         setIsChecking(false)
-         return
+        setIsFreeLimit(false)
+        setIsChecking(false)
+        return
       }
 
       const { count } = await supabase.from('workflows').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
       if (count && count >= 3) setIsFreeLimit(true)
       setIsChecking(false)
     }
+
     checkSub()
   }, [supabase])
+
+  useEffect(() => {
+    if (isFreeLimit) {
+      setShowLimitModal(true)
+    }
+  }, [isFreeLimit])
 
   async function generateWorkflow(e) {
     if (e) e.preventDefault()
     if (!prompt.trim()) return
+
     setLoading(true)
     setError(null)
     setGeneratedData(null)
 
     try {
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.push('/login'); return }
+      const user = await getClientSessionUser(supabase)
+      if (!user) {
+        setError('Your session is not ready. Refresh the page and try again.')
+        return
+      }
 
-      // Enforce Profile Sync
       await supabase.from('profiles').upsert({ id: user.id, name: user.email.split('@')[0] }, { onConflict: 'id' })
 
       const res = await fetch('/api/ai', {
@@ -70,18 +86,20 @@ export default function GeneratePage() {
       const json = await res.json()
       if (!res.ok) throw new Error(json.error || 'Failed connecting to AI engine')
 
-      const result = json 
-
-      const { data: newWf, error: wfError } = await supabase.from('workflows').insert([{ user_id: user.id, title: result.title, category: 'AI Generated' }]).select().single()
+      const result = json
+      const { data: newWf, error: wfError } = await supabase
+        .from('workflows')
+        .insert([{ user_id: user.id, title: result.title, category: 'AI Generated' }])
+        .select()
+        .single()
 
       if (wfError) throw wfError
 
-      const taskInserts = result.tasks.map(taskTitle => ({ workflow_id: newWf.id, title: taskTitle, status: 'todo' }))
+      const taskInserts = result.tasks.map((taskTitle) => ({ workflow_id: newWf.id, title: taskTitle, status: 'todo' }))
       if (taskInserts.length > 0) await supabase.from('tasks').insert(taskInserts)
 
-      // --- DEBUG TOKEN USAGE ---
       if (result.debug?.tokens) {
-         console.log('[AI DEBUG] Execution Token Usage:', result.debug.tokens)
+        console.log('[AI DEBUG] Execution Token Usage:', result.debug.tokens)
       }
 
       setGeneratedData(result)
@@ -93,175 +111,153 @@ export default function GeneratePage() {
     }
   }
 
-  const useTemplate = (tPrompt) => {
-    setPrompt(tPrompt)
-    // Optional: auto trigger generate? User better off seeing it fill first
+  const applyTemplate = (templatePrompt) => {
+    setPrompt(templatePrompt)
   }
 
-  if (isChecking) return <div className="h-[80vh] flex items-center justify-center text-zinc-500 font-black uppercase tracking-[0.4em] text-[10px] animate-pulse italic">Accessing Synthesis Matrix...</div>
+  if (isChecking) {
+    return (
+      <div className="flex h-[70vh] items-center justify-center">
+        <Card className="rounded-[30px] p-8 text-center">
+          <div className="mx-auto mb-4 h-14 w-14 rounded-2xl border border-white/10 bg-white/[0.04] animate-pulse" />
+          <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Accessing synthesis matrix</div>
+        </Card>
+      </div>
+    )
+  }
 
   if (isFreeLimit) {
-     return (
-        <Card className="max-w-2xl mx-auto p-12 text-center border-[#7c3aed]/30 bg-[#12121a]/80 backdrop-blur-3xl mt-12 shadow-2xl animate-slide-up rounded-[40px] relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-[#7c3aed] to-transparent" />
-            <Badge status="danger" className="inline-block mb-6 px-4 py-1.5 font-black text-[9px] uppercase tracking-widest italic bg-red-500/10 text-red-500 border-none">Matrix Cluster Full</Badge>
-            <h2 className="text-4xl font-black text-white mb-4 italic tracking-tighter uppercase">Neural Capacity Reached</h2>
-            <p className="text-[#a1a1aa] mb-10 text-sm leading-relaxed max-w-sm mx-auto font-medium italic">Your account cluster is currently running at maximum capacity for the free tier. Upgrade for unlimited telemetry.</p>
-            <Link href="/subscription" className="w-full sm:w-auto inline-block">
-                <Button className="w-full h-14 px-12 font-black uppercase text-[10px] tracking-[0.3em] shadow-xl shadow-purple-600/30 rounded-2xl">Upgrade Access Protocol &rarr;</Button>
-            </Link>
+    return (
+      <>
+        <Modal
+          isOpen={showLimitModal}
+          onClose={() => setShowLimitModal(false)}
+          onConfirm={() => router.push('/subscription')}
+          title="Free Limit Reached"
+          message="Your free plan has reached its workflow capacity. Upgrade to Pro to continue generating and injecting workflows without interruption."
+          confirmText="Upgrade Pro"
+          cancelText="Later"
+          variant="danger"
+        />
+        <Card className="mx-auto mt-8 max-w-3xl rounded-[34px] p-8 text-center sm:p-12">
+          <Badge status="danger" className="mb-6">Matrix Cluster Full</Badge>
+          <h2 className="text-4xl font-semibold tracking-tight text-white">Neural Capacity Reached</h2>
+          <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-slate-400">Your free tier is at maximum capacity. Upgrade to unlock unlimited workflow synthesis and priority neural processing.</p>
+          <Link href="/subscription" className="mt-8 inline-flex">
+            <Button className="h-12 px-6 text-xs font-semibold uppercase tracking-[0.22em]">Upgrade Access Protocol</Button>
+          </Link>
         </Card>
-     )
+      </>
+    )
   }
 
   return (
-    <div className="space-y-12 animate-fade-in pb-20 relative">
-       {/* 🪐 Deep Space Background Elements */}
-       <div className="absolute top-[-100px] left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-gradient-to-b from-[#7c3aed]/10 to-transparent blur-[120px] rounded-full -z-10 pointer-events-none" />
+    <div className="space-y-8 pb-8 animate-fade-in relative">
+      <div className="absolute left-1/2 top-[-120px] h-[560px] w-[900px] -translate-x-1/2 rounded-full bg-cyan-400/10 blur-[120px] pointer-events-none" />
 
-      {/* Header with Technical Glow */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between border-b border-[#3f3f46]/30 pb-10 gap-6">
-        <div className="space-y-2">
-           <h1 className="text-5xl font-black text-white italic tracking-tighter uppercase leading-none">Synthesis Engine</h1>
-           <p className="text-[#a1a1aa] font-bold italic tracking-tight text-sm uppercase opacity-60">Neural orchestration using Gemini 2.0 pulse logic.</p>
+      <div className="flex flex-col gap-4 border-b border-white/10 pb-6 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <div className="text-[10px] font-semibold uppercase tracking-[0.28em] text-cyan-300">AI synthesis</div>
+          <h1 className="mt-2 text-4xl font-semibold tracking-tight text-white">Command Center</h1>
+          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-400">Turn a prompt into a structured workflow, then inject it into your clusters with a polished premium interface.</p>
         </div>
-        <div className="flex items-center gap-4">
-           <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-[#7c3aed] uppercase tracking-widest animate-pulse">Neural Signal: Connected</span>
-              <span className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest italic">Matrix v.04</span>
-           </div>
+        <div className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs uppercase tracking-[0.24em] text-slate-400">
+          Neural signal active
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
-        
-        {/* Input Directive Panel */}
-        <div className="lg:col-span-12 xl:col-span-5 flex flex-col gap-6">
-           <Card className="p-0 border-[#3f3f46]/40 overflow-hidden bg-[#18181b]/60 backdrop-blur-xl shadow-2xl relative flex flex-col rounded-[32px] group">
-              <div className="absolute inset-0 bg-dotted-grid opacity-5 pointer-events-none" />
-              <div className="p-6 bg-black/40 border-b border-[#3f3f46]/30 flex items-center justify-between">
-                 <div className="flex items-center gap-3">
-                    <div className="w-2 h-2 rounded-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,1)]" />
-                    <h2 className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Objective Input</h2>
-                 </div>
-                 <div className="text-[9px] font-black text-zinc-600 uppercase tracking-widest border border-white/5 px-3 py-1 rounded-full">Manual Register</div>
-              </div>
-              <form onSubmit={generateWorkflow} className="flex-1 flex flex-col">
-                <textarea
-                  className="flex-1 min-h-[350px] w-full bg-transparent p-10 text-xl text-white placeholder-zinc-800 focus:outline-none resize-none font-sans font-medium italic !leading-relaxed transition-all"
-                  placeholder="Inject pulse sequence logic here..."
-                  value={prompt}
-                  onChange={(e) => setPrompt(e.target.value)}
-                  disabled={loading}
-                  autoFocus
-                />
-                {error && <div className="mx-10 mb-6 text-red-500 font-black uppercase tracking-widest text-[9px] bg-red-500/5 p-4 rounded-2xl border border-red-500/20 leading-relaxed italic animate-shake">{error}</div>}
-                <div className="p-8 bg-black/40">
-                   <Button type="submit" isLoading={loading} className="w-full h-16 font-black uppercase text-[11px] tracking-[0.4em] shadow-2xl shadow-purple-600/20 italic rounded-[22px] hover:scale-[1.02] transition-transform">
-                      Synthesize Pulse Protocol
-                   </Button>
-                </div>
-              </form>
-           </Card>
+      <div className="flex flex-wrap gap-2">
+        {templates.map((template) => (
+          <button
+            key={template.title}
+            onClick={() => applyTemplate(template.prompt)}
+            className="rounded-full border border-white/10 bg-white/[0.03] px-4 py-2 text-xs font-medium text-slate-300 transition-all hover:border-cyan-400/30 hover:bg-cyan-400/[0.06]"
+          >
+            {template.title}
+          </button>
+        ))}
+      </div>
 
-           {/* Templates Grid */}
-           <div className="space-y-4">
-              <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] ml-2">Available Prototypes</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                 {templates.map((t, i) => (
-                    <button 
-                      key={i} 
-                      onClick={() => useTemplate(t.prompt)}
-                      className="text-left p-5 rounded-[22px] bg-[#18181b]/30 border border-[#3f3f46]/30 hover:border-[#7c3aed]/40 hover:bg-[#18181b]/60 transition-all group flex flex-col gap-2 relative overflow-hidden active:scale-95"
-                    >
-                       <div className="h-full w-1 absolute left-0 top-0 bg-[#7c3aed] opacity-0 group-hover:opacity-100 transition-opacity" />
-                       <h4 className="text-[11px] font-black text-white uppercase italic tracking-tighter group-hover:text-[#7c3aed] transition-colors">{t.title}</h4>
-                       <p className="text-[9px] font-medium text-zinc-600 line-clamp-1 leading-relaxed italic tracking-tight">{t.prompt}</p>
-                    </button>
-                 ))}
-              </div>
-           </div>
-        </div>
+      <div className="grid gap-6 xl:grid-cols-[0.9fr_1.1fr]">
+        <Card className="rounded-[34px] p-0 overflow-hidden">
+          <div className="border-b border-white/10 px-6 py-4">
+            <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Prompt input</div>
+          </div>
+          <form onSubmit={generateWorkflow} className="flex flex-col">
+            <textarea
+              className="min-h-[360px] w-full resize-none bg-transparent px-6 py-6 text-base leading-7 text-white outline-none placeholder:text-slate-600"
+              placeholder="Describe the workflow you want KlyVora to synthesize..."
+              value={prompt}
+              onChange={(event) => setPrompt(event.target.value)}
+              disabled={loading}
+            />
+            {error && <div className="mx-6 mb-4 rounded-2xl border border-red-400/20 bg-red-400/10 px-4 py-3 text-sm text-red-200">{error}</div>}
+            <div className="border-t border-white/10 p-6">
+              <Button type="submit" isLoading={loading} className="h-14 w-full text-xs font-semibold uppercase tracking-[0.28em]">
+                Synthesize Workflow
+              </Button>
+            </div>
+          </form>
+        </Card>
 
-        {/* Neural Output Area */}
-        <div className="lg:col-span-12 xl:col-span-7 flex flex-col min-h-[600px]">
-           {loading ? (
-             <div className="h-full flex flex-col items-center justify-center space-y-8 animate-pulse">
-                 <div className="relative">
-                    <div className="w-32 h-32 rounded-full border border-purple-500/10 flex items-center justify-center">
-                       <div className="w-24 h-24 rounded-full border-2 border-dashed border-purple-500/40 animate-spin-slow" />
-                    </div>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                       <div className="w-8 h-8 bg-[#7c3aed] rounded-lg shadow-[0_0_30px_rgba(124,58,237,0.8)] animate-ping" />
-                    </div>
-                 </div>
-                 <div className="text-center">
-                    <h3 className="text-2xl font-black text-white mb-2 italic tracking-tighter uppercase leading-none">Synthesis Active</h3>
-                    <p className="text-[#7c3aed] text-[10px] font-black uppercase tracking-[0.5em] italic">Constructing Cluster Geometry</p>
-                 </div>
-             </div>
-           ) : generatedData ? (
-             <Card className="p-0 border-[#7c3aed]/30 overflow-hidden bg-[#18181b]/80 backdrop-blur-2xl shadow-[0_30px_60px_rgba(0,0,0,0.5)] h-full flex flex-col rounded-[40px] animate-slide-up">
-                 <div className="bg-gradient-to-br from-[#7c3aed]/10 via-transparent to-transparent p-12 border-b border-[#3f3f46]/30 relative">
-                    <div className="flex justify-between items-start mb-8">
-                       <Badge className="bg-emerald-500 text-black border-none px-4 py-1.5 font-black text-[9px] uppercase tracking-widest italic rounded-lg">Synthesis Resolved</Badge>
-                       <div className="flex flex-col items-end">
-                          <span className="text-[9px] font-black text-zinc-600 uppercase tracking-widest opacity-40">Matrix Audit ID: #{Math.floor(Math.random() * 99999)}</span>
-                          {generatedData.debug?.tokens && (
-                            <span className="text-[10px] font-bold text-blue-400 mt-2 bg-blue-500/10 px-2 py-1 rounded">
-                               Debug Tokens: {generatedData.debug.tokens.totalTokenCount} (P: {generatedData.debug.tokens.promptTokenCount} | C: {generatedData.debug.tokens.candidatesTokenCount})
-                            </span>
-                          )}
-                       </div>
-                    </div>
-                    <h2 className="text-5xl font-black text-white tracking-tighter italic uppercase underline decoration-[#7c3aed] decoration-8 underline-offset-8 decoration-skip-ink-0 leading-none">{generatedData.title}</h2>
-                 </div>
-                 <div className="p-10 flex-1 overflow-y-auto">
-                    <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                       {generatedData.tasks.map((task, i) => (
-                           <li key={i} className="flex flex-col bg-[#0f0f14]/80 border border-[#3f3f46]/40 p-6 rounded-[28px] group/item hover:border-[#7c3aed]/50 transition-all duration-500">
-                              <div className="flex items-center gap-3 mb-3">
-                                 <span className="text-[10px] font-black text-[#7c3aed] opacity-40 group-hover/item:opacity-100 transition-opacity uppercase tracking-widest italic">Node 0{i + 1}</span>
-                              </div>
-                              <p className="text-white text-base font-bold leading-snug italic tracking-tight group-hover/item:text-purple-400 transition-colors">{task}</p>
-                           </li>
-                       ))}
-                    </ul>
-                 </div>
-                 <div className="p-8 md:p-10 border-t border-[#3f3f46]/30 flex flex-col sm:flex-row justify-between items-center bg-black/40 gap-6">
-                    <p className="text-[9px] font-bold text-zinc-600 uppercase tracking-widest max-w-[200px] leading-relaxed text-center sm:text-left">Neural sequence has been injected into your Clusters database.</p>
-                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                        <Button 
-                          onClick={() => setGeneratedData(null)}
-                          variant="ghost" 
-                          className="h-12 sm:h-14 px-8 rounded-2xl text-[10px] font-black uppercase tracking-widest border border-[#3f3f46] hover:bg-white/5 w-full sm:w-auto"
-                        >
-                          New Synthesis
-                        </Button>
-                        <Link href="/workflows" className="w-full sm:w-auto">
-                          <Button className="w-full h-12 sm:h-14 px-10 rounded-2xl font-black uppercase tracking-[0.2em] text-[10px] bg-[#7c3aed] text-white hover:bg-[#8b5cf6] shadow-xl shadow-purple-500/20 italic border-none">
-                              Verify Cluster &rarr;
-                          </Button>
-                        </Link>
-                    </div>
-                 </div>
-             </Card>
-           ) : (
-             <div className="h-full flex flex-col items-center justify-center p-20 text-center rounded-[48px] border-2 border-dashed border-[#3f3f46]/20 bg-[#18181b]/20 relative overflow-hidden">
-                <div className="absolute inset-0 bg-dotted-grid opacity-[0.03]" />
-                <div className="w-32 h-32 rounded-[32px] bg-[#18181b] border border-[#3f3f46]/30 flex items-center justify-center mb-8 shadow-inner group transition-all hover:rotate-6 hover:scale-110 duration-500">
-                   <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#7c3aed] to-indigo-600 flex items-center justify-center text-white shadow-xl shadow-purple-500/20">
-                      <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
-                   </div>
+        <Card className="rounded-[34px] p-0 overflow-hidden">
+          <div className="border-b border-white/10 px-6 py-4 flex items-center justify-between">
+            <div>
+              <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Generated result</div>
+              <div className="mt-1 text-lg font-medium text-white">AI output panel</div>
+            </div>
+            <Badge status={loading ? 'doing' : generatedData ? 'done' : 'neutral'}>{loading ? 'Generating' : generatedData ? 'Ready' : 'Idle'}</Badge>
+          </div>
+
+          <div className="min-h-[520px] p-6">
+            {loading ? (
+              <div className="flex h-full min-h-[460px] flex-col items-center justify-center text-center">
+                <div className="relative mb-6 h-24 w-24 rounded-full border border-white/10">
+                  <div className="absolute inset-4 rounded-full border-2 border-dashed border-cyan-400/40 animate-spin" />
+                  <div className="absolute inset-8 rounded-full bg-cyan-400/20 blur-md animate-pulse" />
                 </div>
-                <h3 className="text-xl font-black text-white/20 uppercase tracking-[0.5em] italic">Neural Matrix Required</h3>
-                <p className="hidden md:block text-[10px] font-bold text-zinc-700 uppercase tracking-[0.3em] mt-8 max-w-xs leading-relaxed italic">Select a prototype from the sidebar or inject custom sequence logic to begin.</p>
-                <div className="mt-8 flex gap-2">
-                   {[1,2,3,4].map(i => <div key={i} className="w-1.5 h-1.5 rounded-full bg-[#3f3f46]/30 animate-pulse" style={{ animationDelay: `${i * 200}ms` }} />)}
+                <div className="text-2xl font-semibold text-white">Synthesis active</div>
+                <div className="mt-2 text-xs uppercase tracking-[0.28em] text-slate-500">Constructing cluster geometry</div>
+              </div>
+            ) : generatedData ? (
+              <div className="space-y-6">
+                <div className="rounded-[28px] border border-white/10 bg-white/[0.03] p-5">
+                  <div className="text-xs uppercase tracking-[0.28em] text-slate-500">Cluster title</div>
+                  <h2 className="mt-3 text-4xl font-semibold tracking-tight text-white">{generatedData.title}</h2>
                 </div>
-             </div>
-           )}
-        </div>
+
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {generatedData.tasks.map((task, index) => (
+                    <div key={index} className="rounded-[24px] border border-white/10 bg-white/[0.03] p-4">
+                      <div className="text-[10px] uppercase tracking-[0.26em] text-slate-500">Node {String(index + 1).padStart(2, '0')}</div>
+                      <div className="mt-3 text-sm leading-6 text-white">{task}</div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="rounded-[28px] border border-white/10 bg-slate-950/60 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <p className="text-xs uppercase tracking-[0.26em] text-slate-500">Your workflow has been inserted into the database.</p>
+                    <div className="flex gap-3">
+                      <Button variant="secondary" onClick={() => setGeneratedData(null)} className="h-11 px-5 text-[10px] font-semibold uppercase tracking-[0.22em]">New synthesis</Button>
+                      <Link href="/workflows">
+                        <Button className="h-11 px-5 text-[10px] font-semibold uppercase tracking-[0.22em]">Inject to Cluster</Button>
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="flex h-full min-h-[460px] flex-col items-center justify-center rounded-[30px] border border-dashed border-white/10 bg-white/[0.02] text-center">
+                <div className="mb-6 h-20 w-20 rounded-[28px] border border-white/10 bg-white/[0.03] flex items-center justify-center">
+                  <svg className="h-8 w-8 text-cyan-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+                </div>
+                <h3 className="text-2xl font-semibold text-white">Neural Matrix ready</h3>
+                <p className="mt-3 max-w-md text-sm leading-6 text-slate-400">Pick a template or write your own objective. KlyVora will synthesize the workflow and save it to your cluster list.</p>
+              </div>
+            )}
+          </div>
+        </Card>
       </div>
     </div>
   )
