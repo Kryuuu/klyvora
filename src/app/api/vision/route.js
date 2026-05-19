@@ -13,7 +13,7 @@ export async function POST(req) {
     }
 
     // 2. Access Guard (Pro | Developer | Free Limit: 3)
-    const isDeveloper = user.email === (process.env.DEVELOPER_EMAIL || 'admin@klyvora.com')
+    const isDeveloper = user.email === (process.env.DEVELOPER_EMAIL || 'snowtz638@gmail.com')
     let isFreeLimited = false;
 
     if (!isDeveloper) {
