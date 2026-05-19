@@ -8,11 +8,13 @@ export default async function DashboardLayout({ children }) {
   let user = null
 
   try {
-    const userResponse = await supabase.auth.getUser()
-    user = userResponse.data.user
+    const { data, error } = await supabase.auth.getUser()
+    if (error) throw error
+    user = data.user
   } catch {
-    const sessionResponse = await supabase.auth.getSession()
-    user = sessionResponse.data.session?.user || null
+    // Token is invalid/expired — force sign out to clear stale cookies
+    await supabase.auth.signOut().catch(() => {})
+    user = null
   }
 
   if (!user) {
